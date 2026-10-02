@@ -81,6 +81,18 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
 .amount-row input{flex:1;min-width:0;border:0;background:none;font-family:var(--f-display);font-weight:800;font-size:2rem;padding:2px 0;outline:none}
 .amount-row .eur{font-family:var(--f-display);font-weight:800;font-size:2rem;color:var(--muted)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px}
+.seg button{border:0;background:none;border-radius:9px;padding:9px 6px;font-weight:600;cursor:pointer;color:var(--muted);line-height:1.2}
+.seg button small{display:block;font-family:var(--f-mono);font-weight:400;font-size:.66rem}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px color-mix(in srgb,var(--ink) 18%,transparent)}
+#addForm.income .seg button[aria-pressed="true"]{color:var(--good)}
+#addForm.income .chip[aria-pressed="true"]{background:var(--good);border-color:var(--good)}
+#addForm.income .primary{background:var(--good);color:#fff}
+#addForm.income .amount-row:focus-within{border-color:var(--good)}
+.item.in .price{color:var(--good)}
+.sums{display:grid;gap:2px;margin-top:12px;border-top:1px dashed var(--line);padding-top:8px}
+.sums div{display:flex;justify-content:space-between}
+.sums .plus{color:var(--good)}
 .chip{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:6px 10px;cursor:pointer;display:grid;line-height:1.2;text-align:left}
 .chip .tr{font-size:.85rem;font-weight:600}
 .chip .de{font-size:.66rem}
@@ -149,14 +161,17 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
     </form>
     <div class="bar" aria-hidden="true"><i id="barFill" style="width:0%"></i></div>
     <div class="stats">
-      <div><span>Bütçe</span><b class="num" id="sBudget">—</b></div>
+      <div><span id="sBudgetLabel">Bütçe</span><b class="num" id="sBudget">—</b></div>
       <div><span>Harcanan</span><b class="num" id="sSpent">0,00 €</b></div>
       <div><span>Günlük limit</span><b class="num" id="sDaily">—</b></div>
     </div>
   </section>
 
   <form class="card" id="addForm" autocomplete="off">
-    <h2>Harcama ekle <span class="de">Ausgabe hinzufügen</span></h2>
+    <div class="seg" role="group" aria-label="Tür">
+      <button type="button" id="modeOut" aria-pressed="true">− Harcama<small>Ausgabe</small></button>
+      <button type="button" id="modeIn" aria-pressed="false">+ Para ekle<small>Einnahme</small></button>
+    </div>
     <label class="amount-row">
       <input id="amount" inputmode="decimal" placeholder="0,00" aria-label="Tutar (€)">
       <span class="eur">€</span>
@@ -167,7 +182,7 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
       <input class="field" id="date" type="date" aria-label="Tarih">
     </div>
     <p class="err" id="err"></p>
-    <button class="primary" type="submit">Ekle · Hinzufügen</button>
+    <button class="primary" type="submit" id="submitBtn">Harcamayı ekle</button>
   </form>
 
   <section class="card">
@@ -180,7 +195,11 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
     <h3>KASSENBON</h3>
     <div class="sub" id="receiptSub">—</div>
     <div id="list"></div>
-    <div class="total"><span>SUMME</span><span class="num" id="listTotal">0,00 €</span></div>
+    <div class="sums">
+      <div class="plus"><span>EINNAHMEN</span><span class="num" id="sumIn">0,00 €</span></div>
+      <div><span>AUSGABEN</span><span class="num" id="listTotal">0,00 €</span></div>
+    </div>
+    <div class="total"><span>SALDO</span><span class="num" id="sumSaldo">0,00 €</span></div>
   </section>
 
   <section class="card">
@@ -210,7 +229,16 @@ const CATS=[
   {id:"kurs",tr:"Almanca kursu",de:"Sprachkurs"},
   {id:"diger",tr:"Diğer",de:"Sonstiges"}
 ];
-const catById=Object.fromEntries(CATS.map(c=>[c.id,c]));
+const INCATS=[
+  {id:"maas",tr:"Maaş",de:"Gehalt"},
+  {id:"bahsis",tr:"Bahşiş",de:"Trinkgeld"},
+  {id:"ekis",tr:"Ek iş",de:"Nebenjob"},
+  {id:"hediye",tr:"Hediye",de:"Geschenk"},
+  {id:"iade",tr:"İade",de:"Rückerstattung"},
+  {id:"digergelir",tr:"Diğer",de:"Sonstiges"}
+];
+const catById=Object.fromEntries([...CATS,...INCATS].map(c=>[c.id,c]));
+const isIn=e=>e.type==="income";
 const AYLAR=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
 const MONATE=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
 const eur=c=>(c/100).toLocaleString("de-DE",{style:"currency",currency:"EUR"});
@@ -225,7 +253,7 @@ function parseEuro(s){
   return Number.isFinite(v)?Math.round(v*100):NaN;
 }
 
-let month=today().slice(0,7), selCat="market", budget=0, expenses=[];
+let month=today().slice(0,7), mode="out", selCat="market", selInCat="maas", budget=0, expenses=[];
 let store=null;
 
 /* ---- storage: claude db (synced) with a localStorage fallback ---- */
@@ -255,20 +283,24 @@ function render(){
   const [y,m]=month.split("-").map(Number);
   $("monthLabel").textContent=`${AYLAR[m-1]} ${y}`;
   $("receiptSub").textContent=`${MONATE[m-1]} ${y} · ${expenses.length} Posten`;
-  const spent=expenses.reduce((a,e)=>a+(e.amount||0),0);
-  const rem=budget-spent;
+  const outs=expenses.filter(e=>!isIn(e)), ins=expenses.filter(isIn);
+  const spent=outs.reduce((a,e)=>a+(e.amount||0),0);
+  const income=ins.reduce((a,e)=>a+(e.amount||0),0);
+  const total=budget+income;
+  const rem=total-spent;
   const hero=$("hero");
-  if(budget>0){
+  $("sBudgetLabel").textContent=income>0?(budget>0?"Bütçe + gelen":"Gelen para"):"Bütçe";
+  if(total>0){
     $("remaining").textContent=eur(rem);
     hero.classList.toggle("over",rem<0);
     $("heroLabel").textContent=rem<0?"Bütçeyi aştın · Überzogen":"Kalan para · Restbetrag";
-    $("barFill").style.width=Math.max(0,Math.min(100,rem/budget*100))+"%";
-    $("sBudget").textContent=eur(budget);
+    $("barFill").style.width=Math.max(0,Math.min(100,rem/total*100))+"%";
+    $("sBudget").textContent=eur(total);
     $("budgetBtn").textContent="Bütçeyi değiştir";
   }else{
     $("remaining").textContent=eur(-spent);
     hero.classList.remove("over");
-    $("heroLabel").textContent="Önce aylık bütçeni gir →";
+    $("heroLabel").textContent="Bütçe gir ya da para ekle →";
     $("barFill").style.width="0%";
     $("sBudget").textContent="—";
     $("budgetBtn").textContent="Bütçe ayarla";
@@ -278,13 +310,13 @@ function render(){
   const now=new Date(), daysInMonth=new Date(y,m,0).getDate();
   const isThis=month===today().slice(0,7), isPast=month<today().slice(0,7);
   const daysLeft=isThis?daysInMonth-now.getDate()+1:isPast?0:daysInMonth;
-  $("sDaily").textContent=budget>0&&daysLeft>0?eur(Math.max(0,Math.floor(rem/daysLeft))):"—";
+  $("sDaily").textContent=total>0&&daysLeft>0?eur(Math.max(0,Math.floor(rem/daysLeft))):"—";
 
   // categories
-  const by={};expenses.forEach(e=>by[e.cat]=(by[e.cat]||0)+e.amount);
+  const by={};outs.forEach(e=>by[e.cat]=(by[e.cat]||0)+e.amount);
   const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]);
   const max=rows[0]?.[1]||1;
-  $("cats").innerHTML=rows.length?rows.map(([c,v])=>{const k=catById[c]||catById.diger;return `<div class="cat"><div class="name">${k.tr}<span class="de">${k.de}</span></div><div class="amt num">${eur(v)}<span class="pct">${Math.round(v/spent*100)}%</span></div><div class="track"><i style="width:${v/max*100}%"></i></div></div>`}).join(""):`<div class="empty">Bu ay henüz harcama yok. İlk harcamanı yukarıdan ekle, burada kategorilere göre göreceksin.</div>`;
+  $("cats").innerHTML=rows.length?rows.map(([c,v])=>{const k=catById[c]||catById.diger;return `<div class="cat"><div class="name">${k.tr}<span class="de">${k.de}</span></div><div class="amt num">${eur(v)}<span class="pct">${Math.round(v/spent*100)}%</span></div><div class="track"><i style="width:${v/max*100}%"></i></div></div>`}).join(""):`<div class="empty">Bu ay henüz harcama yok. Harcama ekledikçe burada kategorilere göre göreceksin.</div>`;
   const tip=$("tip");
   if(rows.length&&spent>0){
     const [c,v]=rows[0];const k=catById[c]||catById.diger;
@@ -298,18 +330,37 @@ function render(){
   for(const e of sorted){
     if(e.date!==lastDay){lastDay=e.date;const [yy,mm,dd]=e.date.split("-");const dt=new Date(+yy,+mm-1,+dd);html+=`<div class="day">${dd}.${mm}.${yy} · ${dt.toLocaleDateString("tr-TR",{weekday:"long"})}</div>`}
     const k=catById[e.cat]||catById.diger;
-    html+=`<div class="item"><div class="what">${esc(e.note||k.tr)}<small>${k.tr} · ${k.de}</small></div><div class="price num">${eur(e.amount)}</div><button class="del" data-id="${esc(e.id)}" aria-label="Sil">✕</button></div>`;
+    const inc=isIn(e);
+    html+=`<div class="item${inc?" in":""}"><div class="what">${esc(e.note||k.tr)}<small>${inc?"+ ":""}${k.tr} · ${k.de}</small></div><div class="price num">${inc?"+":""}${eur(e.amount)}</div><button class="del" data-id="${esc(e.id)}" aria-label="Sil">✕</button></div>`;
   }
-  $("list").innerHTML=html||`<div class="empty">Fiş boş. Harcama ekledikçe buraya yazılacak.</div>`;
+  $("list").innerHTML=html||`<div class="empty">Fiş boş. Harcama ya da para ekledikçe buraya yazılacak.</div>`;
   $("listTotal").textContent=eur(spent);
+  $("sumIn").textContent="+"+eur(income);
+  $("sumSaldo").textContent=eur(income-spent);
 }
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function setStatus(t){$("status").textContent=t}
 let toastT;function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove("show"),1800)}
 
 /* ---- UI wiring ---- */
-$("chips").innerHTML=CATS.map(c=>`<button type="button" class="chip" data-cat="${c.id}" aria-pressed="${c.id===selCat}"><span class="tr">${c.tr}</span><span class="de">${c.de}</span></button>`).join("");
-$("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;selCat=b.dataset.cat;document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+function drawChips(){
+  const list=mode==="in"?INCATS:CATS, cur=mode==="in"?selInCat:selCat;
+  $("chips").innerHTML=list.map(c=>`<button type="button" class="chip" data-cat="${c.id}" aria-pressed="${c.id===cur}"><span class="tr">${c.tr}</span><span class="de">${c.de}</span></button>`).join("");
+}
+function setMode(m){
+  mode=m;
+  $("addForm").classList.toggle("income",m==="in");
+  $("modeOut").setAttribute("aria-pressed",m==="out");
+  $("modeIn").setAttribute("aria-pressed",m==="in");
+  $("submitBtn").textContent=m==="in"?"+ Parayı ekle":"Harcamayı ekle";
+  $("note").placeholder=m==="in"?"Not (ör. Ekim maaşı, bahşiş)":"Not (ör. Lidl, Deutschlandticket)";
+  $("err").textContent="";
+  drawChips();
+}
+$("modeOut").onclick=()=>setMode("out");
+$("modeIn").onclick=()=>setMode("in");
+drawChips();
+$("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;if(mode==="in")selInCat=b.dataset.cat;else selCat=b.dataset.cat;document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===b))});
 $("date").value=today();
 
 $("addForm").addEventListener("submit",async e=>{
@@ -320,10 +371,10 @@ $("addForm").addEventListener("submit",async e=>{
   const date=$("date").value||today();
   $("err").textContent="";
   try{
-    await store.add({amount,cat:selCat,note:$("note").value.trim(),date,month:date.slice(0,7),createdAt:Date.now()});
+    await store.add({type:mode==="in"?"income":"expense",amount,cat:mode==="in"?selInCat:selCat,note:$("note").value.trim(),date,month:date.slice(0,7),createdAt:Date.now()});
     $("amount").value="";$("note").value="";
     if(date.slice(0,7)!==month){month=date.slice(0,7);watch()}
-    toast(`${eur(amount)} eklendi`);
+    toast(mode==="in"?`+${eur(amount)} eklendi, kalan para arttı`:`${eur(amount)} eklendi`);
     $("amount").focus();
   }catch(err){$("err").textContent="Kaydedilemedi ("+(err?.code||"hata")+"). Tekrar dene."}
 });
