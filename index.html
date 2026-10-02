@@ -134,7 +134,38 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
 .total{display:flex;justify-content:space-between;border-top:2px solid var(--ink);margin-top:12px;padding-top:8px;font-weight:600}
 .empty{text-align:center;color:var(--muted);padding:18px 8px;font-family:var(--f-body)}
 .status{font-size:.75rem;color:var(--muted);text-align:center}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .2s}
+.view{display:grid;gap:18px}
+.wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:5;display:grid;grid-template-columns:1fr 1fr;background:color-mix(in srgb,var(--surface) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:6px 16px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabbar button{border:0;background:none;padding:6px;border-radius:10px;cursor:pointer;color:var(--muted);font-weight:600;font-size:.82rem;display:grid;justify-items:center;gap:2px}
+.tabbar button svg{width:24px;height:24px}
+.tabbar button[aria-selected="true"]{color:var(--accent)}
+.today-tip{background:var(--ink);color:var(--bg);border-radius:20px;padding:18px 20px;display:grid;gap:8px}
+.today-tip .label{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;opacity:.7}
+.today-tip h3{margin:0;font-family:var(--f-display);font-weight:800;font-size:1.3rem;line-height:1.2;text-wrap:balance}
+.today-tip p{margin:0;opacity:.9}
+.today-tip .word{font-family:var(--f-mono);font-size:.8rem;opacity:.8}
+.today-tip .row{display:flex;gap:8px;flex-wrap:wrap}
+.today-tip button{border:1px solid color-mix(in srgb,var(--bg) 35%,transparent);background:none;color:var(--bg);border-radius:999px;padding:6px 14px;font-size:.82rem;cursor:pointer}
+.hint{background:var(--accent-soft);border-radius:12px;padding:12px 14px;font-size:.9rem}
+.hint b{font-weight:600}
+.tipcats{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.tipcats::-webkit-scrollbar{display:none}
+.tipcats button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:.85rem;font-weight:600;cursor:pointer;white-space:nowrap}
+.tipcats button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.tips{display:grid;gap:10px}
+.tip-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;gap:6px}
+.tip-card.done{opacity:.6}
+.tip-card .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.tip-card h4{margin:0;font-size:1rem;font-weight:600;line-height:1.3}
+.tip-card .save{flex:none;font-family:var(--f-mono);font-size:.72rem;color:var(--good);font-weight:600;white-space:nowrap}
+.tip-card p{margin:0;font-size:.9rem;color:var(--muted)}
+.tip-card .foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tip-card .word{font-family:var(--f-mono);font-size:.76rem;background:var(--bg);border-radius:6px;padding:3px 8px}
+.tip-card .done-btn{border:1px solid var(--line);background:none;border-radius:999px;padding:5px 12px;font-size:.8rem;cursor:pointer}
+.tip-card.done .done-btn{background:var(--good);border-color:var(--good);color:#fff}
+.note-small{font-size:.75rem;color:var(--muted);text-align:center;margin:0}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .2s}
 .toast.show{opacity:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -149,6 +180,7 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
       <button id="next" aria-label="Sonraki ay">›</button>
     </div>
   </header>
+  <div class="view" id="viewMoney">
 
   <section class="hero" id="hero">
     <div>
@@ -212,7 +244,26 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
     </div>
   </section>
   <div class="status" id="status">İnternetsiz çalışır · Offline</div>
+  </div>
+
+  <div class="view" id="viewTips" hidden>
+    <section class="today-tip" aria-live="polite">
+      <div class="label">Günün ipucu · Tipp des Tages</div>
+      <h3 id="tdTitle">—</h3>
+      <p id="tdText"></p>
+      <div class="word" id="tdWord"></div>
+      <div class="row"><button type="button" id="tdNext">Başka ipucu →</button></div>
+    </section>
+    <div class="hint" id="spendHint" hidden></div>
+    <div class="tipcats" id="tipCats" role="group" aria-label="İpucu kategorisi"></div>
+    <div class="tips" id="tipList"></div>
+    <p class="note-small">Fiyatlar ve kurallar değişebilir. Önemli kararlardan önce güncel bilgiyi kontrol et.</p>
+  </div>
 </div>
+<nav class="tabbar" role="tablist">
+  <button type="button" role="tab" id="tabMoney" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12h2"/><path d="M3 9h18"/></svg>Cüzdan</button>
+  <button type="button" role="tab" id="tabTips" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.4 1 2.5h6c0-1.1.3-1.8 1-2.5A6 6 0 0 0 12 3z"/></svg>İpuçları</button>
+</nav>
 <div class="toast" id="toast" role="status"></div>
 
 
@@ -421,6 +472,97 @@ $("importFile").onchange=async e=>{
   }catch{toast("Bu dosya bir Cüzdan yedeği değil")}
   e.target.value="";
 };
+
+/* ---- tips ---- */
+const TIPCATS=[
+  {id:"all",tr:"Hepsi"},
+  {id:"market",tr:"Market"},
+  {id:"kazan",tr:"Daha çok kazan"},
+  {id:"vergi",tr:"Vergi iadesi"},
+  {id:"ulasim",tr:"Ulaşım"},
+  {id:"fatura",tr:"Faturalar"},
+  {id:"ev",tr:"Ev"},
+  {id:"aliskanlik",tr:"Alışkanlık"}
+];
+const TIPS=[
+  {id:"m1",cat:"market",t:"Akşam indirim etiketlerini yakala",x:"Lidl, Aldi, Rewe, Edeka gibi marketlerde son kullanma tarihi yaklaşan ürünlere akşamları %30-50 indirim etiketi yapıştırılır. Et, ekmek ve sütü kapanıştan 1-2 saat önce almak ciddi fark yaratır.",w:"reduziert = indirimli",s:"ayda ~30 €"},
+  {id:"m2",cat:"market",t:"Pfand şişelerini at değil, geri ver",x:"Pfand logosu olan tek kullanımlık şişe ve kutularda 0,25 € depozito var. Marketteki makineye (Pfandautomat) ver, çıkan fişi kasada düşürt.",w:"das Pfand = depozito",s:"ayda ~5-10 €"},
+  {id:"m3",cat:"market",t:"Markanın değil marketin kendi ürününü al",x:"Ja!, K-Classic, Gut & Günstig gibi market markaları (Eigenmarke) çoğu zaman aynı fabrikada üretilir ve %30-40 daha ucuzdur. Un, pirinç, makarna, süt ve temizlik ürünlerinde fark yoktur.",w:"die Eigenmarke = market markası",s:"ayda ~25 €"},
+  {id:"m4",cat:"market",t:"Market uygulamalarının kuponlarını kullan",x:"Lidl Plus, Kaufland Card ve Rewe uygulamalarında her hafta kupon çıkar. Kasada uygulamayı okutmak yeterli.",w:"der Gutschein = kupon",s:"ayda ~10 €"},
+  {id:"m5",cat:"market",t:"Too Good To Go ile ucuz yemek kutusu",x:"Fırınlar, restoranlar ve marketler gün sonu kalan yemekleri bu uygulamada 3-5 € arası sürpriz kutularda satar. Bir aşçı olarak malzemeden yemek çıkarmak senin işin.",w:"die Lebensmittelrettung = gıda kurtarma",s:"ayda ~20 €"},
+  {id:"m6",cat:"market",t:"Baharat, bakliyat ve bulguru Türk marketinden al",x:"Kırmızı mercimek, bulgur, pul biber ve büyük paket baharat Türk marketlerinde Alman marketlerinden genelde daha ucuz ve daha büyük pakettir.",w:"die Hülsenfrüchte = bakliyat",s:"ayda ~10 €"},
+  {id:"m7",cat:"market",t:"Haftalık broşüre bakıp liste yap",x:"Marketlerin haftalık indirim broşürleri (Prospekt) pazartesi çıkar. Marktguru ya da Kaufda uygulamasında hepsini görüp listeni ona göre yaz. Listesiz markete giren fazla harcar.",w:"der Einkaufszettel = alışveriş listesi",s:"ayda ~20 €"},
+  {id:"m8",cat:"market",t:"Haftalık yemeği tek seferde pişir",x:"Pazar günü 3-4 porsiyonluk yemek hazırlayıp kutulara bölmek (Meal Prep) hem dışarıda yemeği azaltır hem israfı önler. Bu senin mesleğin, avantajını kullan.",w:"vorkochen = önceden pişirmek",s:"ayda ~60 €"},
+
+  {id:"k1",cat:"kazan",t:"Bahşiş vergiden muaf",x:"Müşterinin sana gönüllü verdiği bahşiş (Trinkgeld) Almanya'da vergiden muaftır. Uygulamada 'Para ekle → Bahşiş' ile kaydet, ayda ne kadar biriktiğini gör.",w:"das Trinkgeld = bahşiş",s:"vergisiz gelir"},
+  {id:"k2",cat:"kazan",t:"Pazar, tatil ve gece zamlarını kontrol et",x:"Pazar, resmi tatil ve gece çalışması için ödenen zamlar (Zuschläge) belli sınırlar içinde vergiden muaftır. Bordronda (Lohnabrechnung) ayrı satır olarak görünüyor mu, kontrol et.",w:"der Sonntagszuschlag = pazar zammı",s:"net maaş artar"},
+  {id:"k3",cat:"kazan",t:"Asgari ücretin altında çalışma",x:"Almanya'da yasal asgari ücret (Mindestlohn) var ve her yıl güncelleniyor. Saat ücretini bordrodan hesapla. Mutfakta sık görülen sorun fazla mesainin kaydedilmemesi; çalıştığın saatleri kendin de not et.",w:"der Mindestlohn = asgari ücret",s:"hakkın olan para"},
+  {id:"k4",cat:"kazan",t:"Toplu sözleşmeyi (Tarif) sor",x:"Gastronomide birçok eyalette DEHOGA toplu sözleşmesi var. Bu sözleşmeye bağlı bir işte çalışıyorsan asgari ücretten daha yüksek maaş, tatil parası ve ek ödemeler hakkın olabilir.",w:"der Tarifvertrag = toplu sözleşme",s:"maaş artışı"},
+  {id:"k5",cat:"kazan",t:"Personel yemeğini kullan",x:"Restoranların çoğunda personel yemeği (Personalessen) ücretsiz ya da çok ucuz. İş günlerinde öğle ya da akşam yemeğini evden değil işten çıkarırsan market faturası düşer.",w:"das Personalessen = personel yemeği",s:"ayda ~80 €"},
+  {id:"k6",cat:"kazan",t:"Minijob ile ek gelir",x:"Ana işinin yanında bir Minijob yapabilirsin. Belli bir aylık sınıra kadar vergi kesilmez, eline geçen para neredeyse brütle aynı olur. Catering, hafta sonu etkinlikleri ve yemek kursları aşçılar için iyi seçenek. Önce iş sözleşmeni kontrol et.",w:"der Nebenjob = ek iş",s:"ek gelir"},
+  {id:"k7",cat:"kazan",t:"Maaş gelince önce kendine öde",x:"Maaş yattığı gün %10'unu ayrı bir hesaba (Tagesgeldkonto) aktar. Ay sonunu bekleme, çünkü ay sonunda hiç para kalmaz. Tagesgeld hesabı faiz de verir.",w:"sparen = biriktirmek",s:"maaşın %10'u"},
+  {id:"k8",cat:"kazan",t:"Türkiye'ye para gönderirken kuru karşılaştır",x:"Bankalar ve klasik para transferi firmaları kurda gizli kesinti yapar. Wise gibi şirketlerin gösterdiği kuru Google'daki gerçek kurla karşılaştır. 500 € gönderimde fark 10-20 € olabilir.",w:"der Wechselkurs = döviz kuru",s:"gönderim başına ~15 €"},
+
+  {id:"v1",cat:"vergi",t:"Vergi beyannamesi ver, para geri al",x:"Çalışanların çoğu Steuererklärung verince para geri alıyor. ELSTER'den ücretsiz, WISO ya da Taxfix gibi uygulamalarla Türkçe yardım alarak da yapılabilir. Zorunlu değilse 4 yıl geriye dönük verebilirsin.",w:"die Steuererklärung = vergi beyannamesi",s:"yılda yüzlerce €"},
+  {id:"v2",cat:"vergi",t:"Bıçak, aşçı ceketi ve iş ayakkabısını yaz",x:"İşin için aldığın şeyler (Arbeitsmittel) vergiden düşülür: aşçı bıçakları, bileme taşı, aşçı ceketi ve önlüğü, güvenlik ayakkabısı. Faturaları sakla, bu uygulamada nota 'iş' yaz.",w:"die Arbeitsmittel = iş malzemeleri",s:"vergi iadesi"},
+  {id:"v3",cat:"vergi",t:"İşe gidiş mesafesini yaz",x:"Ev ile iş arasındaki her km için çalıştığın her gün yol masrafı (Pendlerpauschale) düşebilirsin. Toplu taşıma, bisiklet ya da yürüyerek gitsen de geçerli.",w:"die Pendlerpauschale = yol gideri indirimi",s:"vergi iadesi"},
+  {id:"v4",cat:"vergi",t:"Almanca kursu da düşülebilir",x:"İşin için gerekli olan dil kursu masrafları vergi beyannamesinde masraf olarak yazılabilir. Kurs faturalarını ve ödeme dekontlarını sakla.",w:"die Werbungskosten = mesleki giderler",s:"vergi iadesi"},
+  {id:"v5",cat:"vergi",t:"Vergi sınıfını kontrol et",x:"Bordrodaki vergi sınıfı (Steuerklasse) yanlışsa her ay fazla vergi ödersin. Bekarsan genelde I, ikinci işin varsa o iş VI olur. Evlenirsen sınıf değişebilir.",w:"die Steuerklasse = vergi sınıfı",s:"net maaş"},
+
+  {id:"u1",cat:"ulasim",t:"Deutschlandticket'ı işverenine sor",x:"Birçok işveren Deutschlandticket'a katkı yapıyor (Jobticket). İşveren katkı yapınca bilet sana daha ucuza gelir ve bu katkı vergisizdir.",w:"das Jobticket = iş bileti",s:"ayda ~15-30 €"},
+  {id:"u2",cat:"ulasim",t:"İkinci el bisiklet al",x:"Kleinanzeigen'de iyi bir ikinci el bisiklet 80-150 € arası. Kısa mesafeler için bilete ve benzine para gitmez, spor da olur.",w:"das Fahrrad = bisiklet",s:"bilet parası"},
+  {id:"u3",cat:"ulasim",t:"Türkiye biletini erken al",x:"Uçak bileti fiyatları tarih yaklaştıkça artıyor. Bayram ve yaz dönemi için 2-3 ay önceden fiyat alarmı kur, salı ve çarşamba uçuşları genelde daha ucuzdur.",w:"der Flug = uçuş",s:"bilet başına ~100 €"},
+
+  {id:"f1",cat:"fatura",t:"Ucuz telefon tarifesine geç",x:"Büyük operatörlerin pahalı sözleşmeleri yerine aynı şebekeyi kullanan indirimli markalarda (Discounter) aylık 5-10 € ile yeterli internet paketi bulunur. Telefonu sözleşmeyle değil ayrı al.",w:"der Handyvertrag = telefon sözleşmesi",s:"ayda ~20 €"},
+  {id:"f2",cat:"fatura",t:"Elektrik firmasını karşılaştır",x:"Hiç firma seçmediysen otomatik olarak pahalı temel tarifedesin (Grundversorgung). Check24 ya da Verivox'ta karşılaştırıp geçmek birkaç dakika sürer.",w:"der Stromanbieter = elektrik firması",s:"yılda ~100-200 €"},
+  {id:"f3",cat:"fatura",t:"Sözleşmelerin bitiş tarihini not et",x:"İnternet, spor salonu ve telefon sözleşmeleri iptal edilmezse kendiliğinden uzar. Bitiş tarihlerini takvimine yaz, bitmeden 1 ay önce yazılı iptal (Kündigung) gönder.",w:"die Kündigung = iptal",s:"istenmeyen ödemeler"},
+  {id:"f4",cat:"fatura",t:"Radyo-TV vergisi evde bir kere ödenir",x:"Rundfunkbeitrag kişi başı değil ev başına ödenir. WG'de (paylaşımlı evde) yaşıyorsan bir kişi öder, diğerleri onun numarasını bildirip bölüşür.",w:"der Rundfunkbeitrag = yayın ücreti",s:"ayda ~9-18 €"},
+
+  {id:"e1",cat:"ev",t:"Eşyayı ikinci el bul",x:"Kleinanzeigen ve Facebook gruplarında mobilya, mutfak eşyası ve elektronik çok ucuz, bazen ücretsiz ('zu verschenken'). Taşınan öğrenciler iyi eşyayı bedavaya verir.",w:"zu verschenken = bedavaya verilir",s:"yüzlerce €"},
+  {id:"e2",cat:"ev",t:"Kira yardımına (Wohngeld) bak",x:"Gelirin düşükse devletten kira yardımı (Wohngeld) alabilirsin. Belediyenin internet sitesinde hesaplama aracı var, başvuru ücretsiz.",w:"das Wohngeld = kira yardımı",s:"aylık destek"},
+  {id:"e3",cat:"ev",t:"Kütüphane kartı al",x:"Şehir kütüphanesine yıllık üyelik çok ucuz. Almanca kitaplar, dil kursu kitapları, filmler ve bazı yerlerde ücretsiz Almanca konuşma grupları var.",w:"die Bibliothek = kütüphane",s:"kitap parası"},
+  {id:"e4",cat:"ev",t:"Isıtmayı akıllı kullan",x:"Kışın pencereyi sürekli aralık bırakma. Günde 2-3 kez 5 dakika tam aç ve kapat (Stoßlüften). Hem küf olmaz hem ısıtma faturası düşer.",w:"lüften = havalandırmak",s:"yılda ~100 €"},
+
+  {id:"a1",cat:"aliskanlik",t:"24 saat kuralı",x:"Planlamadığın bir şeyi almak istediğinde 24 saat bekle. Ertesi gün hâlâ istiyorsan al. Çoğu zaman vazgeçeceksin.",w:"der Impulskauf = anlık alışveriş",s:"ayda ~40 €"},
+  {id:"a2",cat:"aliskanlik",t:"Kahveyi evden götür",x:"Her gün dışarıdan 3 €'luk bir kahve ayda yaklaşık 65 € eder. Bir termos alıp evden götürmek yılda 700 €'dan fazla bırakır.",w:"der Thermobecher = termos bardak",s:"ayda ~60 €"},
+  {id:"a3",cat:"aliskanlik",t:"Nakit kullanılan haftalar yap",x:"Haftalık market parasını nakit çek ve sadece onu kullan. Cüzdanın inceldiğini görmek kartla ödemekten daha çok fren yapar.",w:"das Bargeld = nakit",s:"ayda ~30 €"},
+  {id:"a4",cat:"aliskanlik",t:"Her harcamayı hemen gir",x:"Kasadan çıkar çıkmaz bu uygulamaya gir. Paranın nereye gittiğini görmek, harcamayı azaltmanın ilk adımı.",w:"die Ausgabe = harcama",s:"farkındalık"},
+  {id:"a5",cat:"aliskanlik",t:"Abonelikleri temizle",x:"Netflix, Spotify, spor salonu, uygulamalar… Banka hesabındaki otomatik ödemelere bak, son 1 ayda kullanmadığını iptal et.",w:"das Abo = abonelik",s:"ayda ~20 €"}
+];
+const SPEND_TO_TIP={market:"market",disari:"aliskanlik",ulasim:"ulasim",fatura:"fatura",kira:"ev",eglence:"aliskanlik",giyim:"aliskanlik",kurs:"vergi",saglik:"vergi",diger:"aliskanlik"};
+let tipCat="all", tdIndex=null;
+const loadDone=()=>{try{return JSON.parse(localStorage.getItem("cuzdan-tips"))||{}}catch{return {}}};
+const saveDone=d=>{try{localStorage.setItem("cuzdan-tips",JSON.stringify(d))}catch{}};
+function renderTips(){
+  if(tdIndex===null){const d=new Date();tdIndex=(d.getFullYear()*372+d.getMonth()*31+d.getDate())%TIPS.length}
+  const td=TIPS[tdIndex];
+  $("tdTitle").textContent=td.t;$("tdText").textContent=td.x;$("tdWord").textContent="🇩🇪 "+td.w;
+  // hint from this month's biggest spending category
+  const by={};expenses.filter(e=>!isIn(e)).forEach(e=>by[e.cat]=(by[e.cat]||0)+e.amount);
+  const top=Object.entries(by).sort((a,b)=>b[1]-a[1])[0];
+  const h=$("spendHint");
+  if(top){const k=catById[top[0]]||catById.diger;const tc=SPEND_TO_TIP[top[0]]||"aliskanlik";const tn=TIPCATS.find(c=>c.id===tc).tr;
+    h.hidden=false;h.innerHTML=`Bu ay en çok <b>${esc(k.tr)}</b> için harcadın (${eur(top[1])}). <b>${esc(tn)}</b> ipuçlarına bak.`;h.dataset.cat=tc;
+  }else h.hidden=true;
+  $("tipCats").innerHTML=TIPCATS.map(c=>`<button type="button" data-cat="${c.id}" aria-pressed="${c.id===tipCat}">${c.tr}</button>`).join("");
+  const done=loadDone();
+  const list=TIPS.filter(t=>tipCat==="all"||t.cat===tipCat).sort((a,b)=>(done[a.id]?1:0)-(done[b.id]?1:0));
+  $("tipList").innerHTML=list.map(t=>`<article class="tip-card${done[t.id]?" done":""}"><div class="top"><h4>${esc(t.t)}</h4><span class="save">${esc(t.s)}</span></div><p>${esc(t.x)}</p><div class="foot"><span class="word">🇩🇪 ${esc(t.w)}</span><button type="button" class="done-btn" data-id="${t.id}">${done[t.id]?"✓ Yaptım":"Yaptım"}</button></div></article>`).join("");
+}
+$("tipCats").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;tipCat=b.dataset.cat;renderTips()});
+$("spendHint").addEventListener("click",()=>{tipCat=$("spendHint").dataset.cat;renderTips();$("tipCats").scrollIntoView({behavior:"smooth",block:"start"})});
+$("tipList").addEventListener("click",e=>{const b=e.target.closest(".done-btn");if(!b)return;const d=loadDone();d[b.dataset.id]=!d[b.dataset.id];saveDone(d);renderTips();if(d[b.dataset.id])toast("Helal olsun 💪")});
+$("tdNext").onclick=()=>{tdIndex=(tdIndex+1)%TIPS.length;renderTips()};
+function showTab(t){
+  const tips=t==="tips";
+  $("viewMoney").hidden=tips;$("viewTips").hidden=!tips;
+  document.querySelector("header .month").style.visibility=tips?"hidden":"visible";
+  $("tabMoney").setAttribute("aria-selected",!tips);$("tabTips").setAttribute("aria-selected",tips);
+  if(tips)renderTips();
+  window.scrollTo(0,0);
+}
+$("tabMoney").onclick=()=>showTab("money");
+$("tabTips").onclick=()=>showTab("tips");
 
 /* ---- boot ---- */
 store=localStore();
