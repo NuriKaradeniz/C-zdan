@@ -184,18 +184,18 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
 
   <section class="hero" id="hero">
     <div>
-      <div class="hero-top"><div class="label" id="heroLabel">Kalan para · Restbetrag</div><button class="budget-btn" id="budgetBtn">Bütçe ayarla</button></div>
+      <div class="hero-top"><div class="label" id="heroLabel">Güncel bakiye · Kontostand</div><button class="budget-btn" id="budgetBtn">Başlangıç parası</button></div>
       <div class="big num" id="remaining">0,00 €</div>
     </div>
     <form class="budget-form" id="budgetForm" hidden>
-      <input id="budgetInput" inputmode="decimal" placeholder="Aylık bütçe, ör. 1200" aria-label="Aylık bütçe (€)">
+      <input id="budgetInput" inputmode="decimal" placeholder="Almanya'ya getirdiğin para, ör. 4000" aria-label="Başlangıç parası (€)">
       <button type="submit">Kaydet</button>
     </form>
     <div class="bar" aria-hidden="true"><i id="barFill" style="width:0%"></i></div>
     <div class="stats">
-      <div><span id="sBudgetLabel">Bütçe</span><b class="num" id="sBudget">—</b></div>
-      <div><span>Harcanan</span><b class="num" id="sSpent">0,00 €</b></div>
-      <div><span>Günlük limit</span><b class="num" id="sDaily">—</b></div>
+      <div><span>Başlangıç</span><b class="num" id="sBudget">—</b></div>
+      <div><span>Bu ay gelen</span><b class="num" id="sIncome">0,00 €</b></div>
+      <div><span>Bu ay harcanan</span><b class="num" id="sSpent">0,00 €</b></div>
     </div>
   </section>
 
@@ -320,7 +320,8 @@ function localStore(){
     watchProfile(cb){psubs.push(cb);cb({budget:load().budget})},
     async add(x){const s=load();s.expenses.push({...x,id:Math.random().toString(36).slice(2)});save(s);emit()},
     async remove(id){const s=load();s.expenses=s.expenses.filter(e=>e.id!==id);save(s);emit()},
-    async setBudget(b){const s=load();s.budget=b;save(s);emit()}
+    async setBudget(b){const s=load();s.budget=b;save(s);emit()},
+    all(){return load().expenses}
   };
 }
 let unsubMonth=null;
@@ -337,31 +338,20 @@ function render(){
   const outs=expenses.filter(e=>!isIn(e)), ins=expenses.filter(isIn);
   const spent=outs.reduce((a,e)=>a+(e.amount||0),0);
   const income=ins.reduce((a,e)=>a+(e.amount||0),0);
-  const total=budget+income;
-  const rem=total-spent;
+  // balance carries over months: start money + everything earned − everything spent up to the end of the viewed month
+  const upto=(store?store.all():expenses).filter(e=>e.month<=month);
+  const allIn=upto.filter(isIn).reduce((a,e)=>a+(e.amount||0),0);
+  const allOut=upto.filter(e=>!isIn(e)).reduce((a,e)=>a+(e.amount||0),0);
+  const balance=budget+allIn-allOut;
   const hero=$("hero");
-  $("sBudgetLabel").textContent=income>0?(budget>0?"Bütçe + gelen":"Gelen para"):"Bütçe";
-  if(total>0){
-    $("remaining").textContent=eur(rem);
-    hero.classList.toggle("over",rem<0);
-    $("heroLabel").textContent=rem<0?"Bütçeyi aştın · Überzogen":"Kalan para · Restbetrag";
-    $("barFill").style.width=Math.max(0,Math.min(100,rem/total*100))+"%";
-    $("sBudget").textContent=eur(total);
-    $("budgetBtn").textContent="Bütçeyi değiştir";
-  }else{
-    $("remaining").textContent=eur(-spent);
-    hero.classList.remove("over");
-    $("heroLabel").textContent="Bütçe gir ya da para ekle →";
-    $("barFill").style.width="0%";
-    $("sBudget").textContent="—";
-    $("budgetBtn").textContent="Bütçe ayarla";
-  }
-  $("sSpent").textContent=eur(spent);
-  // daily limit: remaining spread over the days left this month
-  const now=new Date(), daysInMonth=new Date(y,m,0).getDate();
-  const isThis=month===today().slice(0,7), isPast=month<today().slice(0,7);
-  const daysLeft=isThis?daysInMonth-now.getDate()+1:isPast?0:daysInMonth;
-  $("sDaily").textContent=total>0&&daysLeft>0?eur(Math.max(0,Math.floor(rem/daysLeft))):"—";
+  $("remaining").textContent=eur(balance);
+  hero.classList.toggle("over",balance<0);
+  $("heroLabel").textContent=balance<0?"Eksidesin · Im Minus":"Güncel bakiye · Kontostand";
+  $("barFill").style.width=(budget+allIn>0?Math.max(0,Math.min(100,balance/(budget+allIn)*100)):0)+"%";
+  $("sBudget").textContent=budget>0?eur(budget):"—";
+  $("budgetBtn").textContent=budget>0?"Başlangıcı değiştir":"Başlangıç parası";
+  $("sIncome").textContent="+"+eur(income);
+  $("sSpent").textContent="−"+eur(spent);
 
   // categories
   const by={};outs.forEach(e=>by[e.cat]=(by[e.cat]||0)+e.amount);
@@ -425,7 +415,7 @@ $("addForm").addEventListener("submit",async e=>{
     await store.add({type:mode==="in"?"income":"expense",amount,cat:mode==="in"?selInCat:selCat,note:$("note").value.trim(),date,month:date.slice(0,7),createdAt:Date.now()});
     $("amount").value="";$("note").value="";
     if(date.slice(0,7)!==month){month=date.slice(0,7);watch()}
-    toast(mode==="in"?`+${eur(amount)} eklendi, kalan para arttı`:`${eur(amount)} eklendi`);
+    toast(mode==="in"?`+${eur(amount)} eklendi, bakiye arttı`:`${eur(amount)} eklendi`);
     $("amount").focus();
   }catch(err){$("err").textContent="Kaydedilemedi ("+(err?.code||"hata")+"). Tekrar dene."}
 });
@@ -445,7 +435,7 @@ $("budgetForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const b=parseEuro($("budgetInput").value);
   if(!(b>0)){$("budgetInput").focus();return}
-  try{await store.setBudget(b);budget=b;$("budgetForm").hidden=true;render();toast("Bütçe kaydedildi")}catch{toast("Kaydedilemedi")}
+  try{await store.setBudget(b);budget=b;$("budgetForm").hidden=true;render();toast("Başlangıç parası kaydedildi")}catch{toast("Kaydedilemedi")}
 });
 
 function shiftMonth(d){const [y,m]=month.split("-").map(Number);const dt=new Date(y,m-1+d,1);month=`${dt.getFullYear()}-${pad(dt.getMonth()+1)}`;watch()}
