@@ -49,7 +49,7 @@ button,input,select{font:inherit;color:inherit}
 .num{font-variant-numeric:tabular-nums}
 
 header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{font-family:var(--f-display);font-weight:800;font-size:1.35rem;letter-spacing:-.01em}
+.brand{font-family:var(--f-display);font-weight:800;font-size:1.35rem;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
 .brand small{display:block;font-family:var(--f-mono);font-weight:400;font-size:.7rem;color:var(--muted);letter-spacing:.04em}
 .month{display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
 .month button{border:0;background:none;width:32px;height:32px;border-radius:999px;cursor:pointer;font-size:1.1rem;color:var(--muted)}
@@ -130,7 +130,7 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
 .del{border:0;background:none;cursor:pointer;color:var(--muted);width:30px;height:28px;border-radius:6px;font-size:.9rem}
 .del:hover{background:var(--bad-soft);color:var(--bad)}
 .del.confirm{width:auto;padding:0 6px;background:var(--bad);color:#fff;font-size:.72rem;font-weight:600}
-.item:has(.del.confirm){grid-template-columns:1fr auto auto}
+
 .total{display:flex;justify-content:space-between;border-top:2px solid var(--ink);margin-top:12px;padding-top:8px;font-weight:600}
 .empty{text-align:center;color:var(--muted);padding:18px 8px;font-family:var(--f-body)}
 .status{font-size:.75rem;color:var(--muted);text-align:center}
@@ -192,12 +192,40 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .2s}
 .toast.show{opacity:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* icons */
+.logo{width:40px;height:40px;border-radius:11px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none}
+.logo svg{width:22px!important;height:22px!important}
+.ic{display:inline-grid;place-items:center;flex:none}
+.ic svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.h-ic{width:32px;height:32px;border-radius:9px;background:var(--accent-soft);color:var(--accent);padding:7px;align-self:center}
+.titled{display:flex;align-items:center;gap:10px;min-width:0}
+.stats span{display:flex;align-items:center;gap:5px}
+.stats .ic{width:14px;height:14px}
+.chip{grid-template-columns:auto 1fr;column-gap:8px;align-items:center}
+.chip .ic{width:18px;height:18px;grid-row:span 2;opacity:.85}
+.cat{grid-template-columns:auto 1fr auto}
+.cat .tile{width:30px;height:30px;border-radius:8px;background:var(--accent-soft);color:var(--accent);padding:6px;grid-row:span 2;align-self:center}
+.cat .track{grid-column:2/-1}
+.receipt .item{grid-template-columns:20px 1fr auto 30px}
+.item .ic{width:18px;height:18px;color:var(--muted)}
+.item.in .ic{color:var(--good)}
+.receipt .item:has(.del.confirm){grid-template-columns:20px 1fr auto auto}
+.receipt .r-ic{width:26px;height:26px;margin:0 auto 6px;display:grid;color:var(--muted)}
+.streak .ic{width:26px;height:26px;color:var(--warn)}
+.today-tip .label{display:flex;align-items:center;gap:6px}
+.today-tip .label .ic{width:15px;height:15px}
+.tipcats button{display:inline-flex;align-items:center;gap:6px}
+.tipcats .ic{width:15px;height:15px}
+.tip-card .top{justify-content:flex-start}
+.tip-card .top h4{flex:1}
+.tip-card .tile{width:34px;height:34px;border-radius:10px;background:var(--accent-soft);color:var(--accent);padding:8px}
+.seg button .ic{width:16px;height:16px;vertical-align:-3px;margin-right:4px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div class="brand">Cüzdan<small>MEIN GELDBEUTEL</small></div>
+    <div class="brand"><span class="logo ic" data-ic="wallet"></span><div>Cüzdan<small>MEIN GELDBEUTEL</small></div></div>
     <div class="month">
       <button id="prev" aria-label="Önceki ay">‹</button>
       <span id="monthLabel" class="num">—</span>
@@ -217,15 +245,15 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
     </form>
     <div class="bar" aria-hidden="true"><i id="barFill" style="width:0%"></i></div>
     <div class="stats">
-      <div><span>Başlangıç</span><b class="num" id="sBudget">—</b></div>
-      <div><span>Bu ay gelen</span><b class="num" id="sIncome">0,00 €</b></div>
-      <div><span>Bu ay harcanan</span><b class="num" id="sSpent">0,00 €</b></div>
+      <div><span><i class="ic" data-ic="flag"></i>Başlangıç</span><b class="num" id="sBudget">—</b></div>
+      <div><span><i class="ic" data-ic="arrowIn"></i>Bu ay gelen</span><b class="num" id="sIncome">0,00 €</b></div>
+      <div><span><i class="ic" data-ic="arrowOut"></i>Bu ay giden</span><b class="num" id="sSpent">0,00 €</b></div>
     </div>
   </section>
 
   <section class="card" id="limitCard">
     <div class="limit-head">
-      <h2>Harcama limiti <span class="de">Ausgabenlimit</span></h2>
+      <div class="titled"><span class="ic h-ic" data-ic="target"></span><h2>Harcama limiti <span class="de">Ausgabenlimit</span></h2></div>
       <button type="button" class="link-btn" id="limitBtn">Limit koy</button>
     </div>
     <form class="limit-form" id="limitForm" hidden>
@@ -246,15 +274,15 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
       </div>
       <div class="mbar" aria-hidden="true"><i id="mFill" style="width:0%"></i><b id="mPace" style="left:0%"></b></div>
       <div class="mline"><span>Bu ay <strong class="num" id="mSpent">0 €</strong> / <span class="num" id="mLimit">0 €</span></span><span id="mLeft"></span></div>
-      <div class="streak" id="streak" hidden><b class="num" id="streakN">0</b><span id="streakT"></span></div>
+      <div class="streak" id="streak" hidden><span class="ic" data-ic="flame"></span><b class="num" id="streakN">0</b><span id="streakT"></span></div>
       <p class="limit-note">Kira ve faturalar hariç · Çizgi: bugüne kadar harcaman gereken tutar</p>
     </div>
   </section>
 
   <form class="card" id="addForm" autocomplete="off">
     <div class="seg" role="group" aria-label="Tür">
-      <button type="button" id="modeOut" aria-pressed="true">− Harcama<small>Ausgabe</small></button>
-      <button type="button" id="modeIn" aria-pressed="false">+ Para ekle<small>Einnahme</small></button>
+      <button type="button" id="modeOut" aria-pressed="true"><i class="ic" data-ic="arrowOut"></i>Harcama<small>Ausgabe</small></button>
+      <button type="button" id="modeIn" aria-pressed="false"><i class="ic" data-ic="arrowIn"></i>Para ekle<small>Einnahme</small></button>
     </div>
     <label class="amount-row">
       <input id="amount" inputmode="decimal" placeholder="0,00" aria-label="Tutar (€)">
@@ -270,12 +298,13 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
   </form>
 
   <section class="card">
-    <h2>Para nereye gitti? <span class="de">Wofür?</span></h2>
+    <div class="titled"><span class="ic h-ic" data-ic="pie"></span><h2>Para nereye gitti? <span class="de">Wofür?</span></h2></div>
     <div class="cats" id="cats"></div>
     <div class="tip" id="tip" hidden></div>
   </section>
 
   <section class="receipt" aria-label="Harcama listesi">
+    <span class="ic r-ic" data-ic="receipt"></span>
     <h3>KASSENBON</h3>
     <div class="sub" id="receiptSub">—</div>
     <div id="list"></div>
@@ -287,7 +316,7 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
   </section>
 
   <section class="card">
-    <h2>Yedek <span class="de">Sicherung</span></h2>
+    <div class="titled"><span class="ic h-ic" data-ic="save"></span><h2>Yedek <span class="de">Sicherung</span></h2></div>
     <p style="margin:0;font-size:.88rem;color:var(--muted)">Veriler sadece bu telefonda duruyor. Ayda bir yedek al, telefon değişirse geri yüklersin.</p>
     <div class="backup">
       <button type="button" id="exportBtn">Yedek al</button>
@@ -300,7 +329,7 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
 
   <div class="view" id="viewTips" hidden>
     <section class="today-tip" aria-live="polite">
-      <div class="label">Günün ipucu · Tipp des Tages</div>
+      <div class="label"><i class="ic" data-ic="bulb"></i>Günün ipucu · Tipp des Tages</div>
       <h3 id="tdTitle">—</h3>
       <p id="tdText"></p>
       <div class="word" id="tdWord"></div>
@@ -340,6 +369,44 @@ const INCATS=[
   {id:"iade",tr:"İade",de:"Rückerstattung"},
   {id:"digergelir",tr:"Diğer",de:"Sonstiges"}
 ];
+const ICONS={
+  wallet:'<path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3v3a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5"/>',
+  home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/>',
+  cart:'<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 1.9-1.5L21 8H6"/>',
+  utensils:'<path d="M4 3v7a3 3 0 0 0 6 0V3"/><path d="M7 3v18"/><path d="M17 21V3c-2.5 1-4 4-4 7.5V13h4"/>',
+  train:'<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14"/><path d="M12 3v8"/><path d="m8 21 1.5-4"/><path d="m16 21-1.5-4"/>',
+  bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  heart:'<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 12 5.5 5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/><path d="M8 12h2l1-2 2 4 1-2h2"/>',
+  shirt:'<path d="M8 3 3 6l2 5 3-1v11h8V10l3 1 2-5-5-3a4 4 0 0 1-8 0z"/>',
+  ticket:'<path d="M3 7h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4z"/><path d="M14 7v2M14 11v2M14 15v2"/>',
+  book:'<path d="M4 19.5V5a2 2 0 0 1 2-2h14v15H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h14"/><path d="M8 7h8M8 11h5"/>',
+  dots:'<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
+  banknote:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+  coins:'<circle cx="9" cy="9" r="6"/><path d="M15.6 9.3a6 6 0 1 1-6.3 6.3"/><path d="M9 7v4"/>',
+  chef:'<path d="M6 13.9A4 4 0 0 1 7.2 6a5 5 0 0 1 9.6 0A4 4 0 0 1 18 13.9V20H6z"/><path d="M6 17h12"/>',
+  gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v9H5v-9"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
+  undo:'<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/>',
+  plusc:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  pie:'<path d="M21 12A9 9 0 1 1 12 3v9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/>',
+  receipt:'<path d="M5 2v20l2.5-1.5L10 22l2-1.5 2 1.5 2.5-1.5L19 22V2l-2.5 1.5L14 2l-2 1.5L10 2 7.5 3.5z"/><path d="M9 8h6M9 12h6M9 16h4"/>',
+  save:'<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>',
+  flag:'<path d="M4 22V4"/><path d="M4 4h13l-2 4 2 4H4"/>',
+  arrowIn:'<path d="M17 7 7 17"/><path d="M17 17H7V7"/>',
+  arrowOut:'<path d="M7 17 17 7"/><path d="M7 7h10v10"/>',
+  trend:'<path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
+  percent:'<path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+  repeat:'<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+  bulb:'<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.4 1 2.5h6c0-1.1.3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',
+  flame:'<path d="M12 22c4 0 7-2.7 7-7 0-4-3-6-4-9-1 2-2 3-3.5 3.5C11 7 11 4 12 2 8 4 5 8.5 5 15c0 4.3 3 7 7 7z"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'
+};
+const svg=n=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||ICONS.dots}</svg>`;
+const ic=(n,cls="")=>`<span class="ic ${cls}">${svg(n)}</span>`;
+const CAT_IC={kira:"home",market:"cart",disari:"utensils",ulasim:"train",fatura:"bolt",saglik:"heart",giyim:"shirt",eglence:"ticket",kurs:"book",diger:"dots",
+  maas:"banknote",bahsis:"coins",ekis:"chef",hediye:"gift",iade:"undo",digergelir:"plusc"};
+const TIPCAT_IC={all:"grid",market:"cart",kazan:"trend",vergi:"percent",ulasim:"train",fatura:"bolt",ev:"home",aliskanlik:"repeat"};
+function fillIcons(root=document){root.querySelectorAll("[data-ic]").forEach(el=>{el.innerHTML=svg(el.dataset.ic);el.removeAttribute("data-ic")})}
 const catById=Object.fromEntries([...CATS,...INCATS].map(c=>[c.id,c]));
 const isIn=e=>e.type==="income";
 const AYLAR=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
@@ -411,7 +478,7 @@ function render(){
   const by={};outs.forEach(e=>by[e.cat]=(by[e.cat]||0)+e.amount);
   const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]);
   const max=rows[0]?.[1]||1;
-  $("cats").innerHTML=rows.length?rows.map(([c,v])=>{const k=catById[c]||catById.diger;return `<div class="cat"><div class="name">${k.tr}<span class="de">${k.de}</span></div><div class="amt num">${eur(v)}<span class="pct">${Math.round(v/spent*100)}%</span></div><div class="track"><i style="width:${v/max*100}%"></i></div></div>`}).join(""):`<div class="empty">Bu ay henüz harcama yok. Harcama ekledikçe burada kategorilere göre göreceksin.</div>`;
+  $("cats").innerHTML=rows.length?rows.map(([c,v])=>{const k=catById[c]||catById.diger;return `<div class="cat">${ic(CAT_IC[c]||"dots","tile")}<div class="name">${k.tr}<span class="de">${k.de}</span></div><div class="amt num">${eur(v)}<span class="pct">${Math.round(v/spent*100)}%</span></div><div class="track"><i style="width:${v/max*100}%"></i></div></div>`}).join(""):`<div class="empty">Bu ay henüz harcama yok. Harcama ekledikçe burada kategorilere göre göreceksin.</div>`;
   const tip=$("tip");
   if(rows.length&&spent>0){
     const [c,v]=rows[0];const k=catById[c]||catById.diger;
@@ -426,7 +493,7 @@ function render(){
     if(e.date!==lastDay){lastDay=e.date;const [yy,mm,dd]=e.date.split("-");const dt=new Date(+yy,+mm-1,+dd);html+=`<div class="day">${dd}.${mm}.${yy} · ${dt.toLocaleDateString("tr-TR",{weekday:"long"})}</div>`}
     const k=catById[e.cat]||catById.diger;
     const inc=isIn(e);
-    html+=`<div class="item${inc?" in":""}"><div class="what">${esc(e.note||k.tr)}<small>${inc?"+ ":""}${k.tr} · ${k.de}</small></div><div class="price num">${inc?"+":""}${eur(e.amount)}</div><button class="del" data-id="${esc(e.id)}" aria-label="Sil">✕</button></div>`;
+    html+=`<div class="item${inc?" in":""}">${ic(CAT_IC[e.cat]||"dots")}<div class="what">${esc(e.note||k.tr)}<small>${inc?"+ ":""}${k.tr} · ${k.de}</small></div><div class="price num">${inc?"+":""}${eur(e.amount)}</div><button class="del" data-id="${esc(e.id)}" aria-label="Sil">✕</button></div>`;
   }
   $("list").innerHTML=html||`<div class="empty">Fiş boş. Harcama ya da para ekledikçe buraya yazılacak.</div>`;
   $("listTotal").textContent=eur(spent);
@@ -440,7 +507,7 @@ let toastT;function toast(t){const el=$("toast");el.textContent=t;el.classList.a
 /* ---- UI wiring ---- */
 function drawChips(){
   const list=mode==="in"?INCATS:CATS, cur=mode==="in"?selInCat:selCat;
-  $("chips").innerHTML=list.map(c=>`<button type="button" class="chip" data-cat="${c.id}" aria-pressed="${c.id===cur}"><span class="tr">${c.tr}</span><span class="de">${c.de}</span></button>`).join("");
+  $("chips").innerHTML=list.map(c=>`<button type="button" class="chip" data-cat="${c.id}" aria-pressed="${c.id===cur}">${ic(CAT_IC[c.id])}<span class="tr">${c.tr}</span><span class="de">${c.de}</span></button>`).join("");
 }
 function setMode(m){
   mode=m;
@@ -594,10 +661,10 @@ function renderTips(){
   if(top){const k=catById[top[0]]||catById.diger;const tc=SPEND_TO_TIP[top[0]]||"aliskanlik";const tn=TIPCATS.find(c=>c.id===tc).tr;
     h.hidden=false;h.innerHTML=`Bu ay en çok <b>${esc(k.tr)}</b> için harcadın (${eur(top[1])}). <b>${esc(tn)}</b> ipuçlarına bak.`;h.dataset.cat=tc;
   }else h.hidden=true;
-  $("tipCats").innerHTML=TIPCATS.map(c=>`<button type="button" data-cat="${c.id}" aria-pressed="${c.id===tipCat}">${c.tr}</button>`).join("");
+  $("tipCats").innerHTML=TIPCATS.map(c=>`<button type="button" data-cat="${c.id}" aria-pressed="${c.id===tipCat}">${ic(TIPCAT_IC[c.id])}${c.tr}</button>`).join("");
   const done=loadDone();
   const list=TIPS.filter(t=>tipCat==="all"||t.cat===tipCat).sort((a,b)=>(done[a.id]?1:0)-(done[b.id]?1:0));
-  $("tipList").innerHTML=list.map(t=>`<article class="tip-card${done[t.id]?" done":""}"><div class="top"><h4>${esc(t.t)}</h4><span class="save">${esc(t.s)}</span></div><p>${esc(t.x)}</p><div class="foot"><span class="word">🇩🇪 ${esc(t.w)}</span><button type="button" class="done-btn" data-id="${t.id}">${done[t.id]?"✓ Yaptım":"Yaptım"}</button></div></article>`).join("");
+  $("tipList").innerHTML=list.map(t=>`<article class="tip-card${done[t.id]?" done":""}"><div class="top">${ic(TIPCAT_IC[t.cat],"tile")}<h4>${esc(t.t)}</h4><span class="save">${esc(t.s)}</span></div><p>${esc(t.x)}</p><div class="foot"><span class="word">🇩🇪 ${esc(t.w)}</span><button type="button" class="done-btn" data-id="${t.id}">${done[t.id]?"✓ Yaptım":"Yaptım"}</button></div></article>`).join("");
 }
 $("tipCats").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;tipCat=b.dataset.cat;renderTips()});
 $("spendHint").addEventListener("click",()=>{tipCat=$("spendHint").dataset.cat;renderTips();$("tipCats").scrollIntoView({behavior:"smooth",block:"start"})});
@@ -669,7 +736,7 @@ function renderLimit(){
     $("mLeft").textContent=st.left>=0?`Kalan ${eur(st.left)} · ${st.dim-st.day+1} gün`:`${eur(-st.left)} fazla`;
     const n=streakDays(all,t);
     $("streak").hidden=n<1;$("streakN").textContent=n;
-    $("streakT").textContent=n===1?"gündür günlük limitin içindesin. Devam!":`gündür üst üste günlük limitin içindesin 🔥`;
+    $("streakT").textContent=n===1?"gündür günlük limitin içindesin. Devam!":`gündür üst üste günlük limitin içindesin`;
   }else if(st.kind==="past"){
     const before=limitSince&&month<limitSince.slice(0,7);
     if(before){cls="";pill="Limit yoktu"}
@@ -698,6 +765,7 @@ $("limitForm").addEventListener("submit",async e=>{
 });
 
 /* ---- boot ---- */
+fillIcons();
 store=localStore();
 store.watchProfile(p=>{budget=p?.budget||0;limit=p?.limit||0;limitSince=p?.limitSince||"";render()});
 watch();
