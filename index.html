@@ -135,6 +135,30 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
 .empty{text-align:center;color:var(--muted);padding:18px 8px;font-family:var(--f-body)}
 .status{font-size:.75rem;color:var(--muted);text-align:center}
 .view{display:grid;gap:18px}
+.limit-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pill{font-size:.75rem;font-weight:600;border-radius:999px;padding:3px 10px;white-space:nowrap;background:var(--bg);color:var(--muted)}
+.pill.good{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.today{display:grid;gap:2px}
+.today .k{font-size:.8rem;color:var(--muted)}
+.today .v{font-family:var(--f-display);font-weight:800;font-size:2rem;line-height:1.1;color:var(--good)}
+.today .v.warn{color:var(--warn)} .today .v.bad{color:var(--bad)}
+.today .s{font-size:.82rem;color:var(--muted)}
+.mbar{position:relative;height:10px;border-radius:99px;background:var(--bg);overflow:hidden}
+.mbar i{position:absolute;inset:0 auto 0 0;border-radius:99px;background:var(--good)}
+.mbar i.warn{background:var(--warn)} .mbar i.bad{background:var(--bad)}
+.mbar b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.55}
+.mline{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;color:var(--muted);flex-wrap:wrap}
+.mline strong{color:var(--ink);font-weight:600}
+.streak{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:12px;padding:10px 12px;font-size:.88rem}
+.streak b{font-family:var(--f-display);font-size:1.4rem;font-weight:800}
+.limit-form{display:flex;gap:8px;flex-wrap:wrap}
+.limit-form input{flex:1;min-width:0}
+.limit-form button,.link-btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;font-weight:600;cursor:pointer}
+.link-btn{padding:5px 12px;border-radius:999px;font-size:.8rem}
+.limit-note{margin:0;font-size:.78rem;color:var(--muted)}
+#limitCard h2{display:grid;gap:0}
 .wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:5;display:grid;grid-template-columns:1fr 1fr;background:color-mix(in srgb,var(--surface) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:6px 16px calc(6px + env(safe-area-inset-bottom,0px))}
 .tabbar button{border:0;background:none;padding:6px;border-radius:10px;cursor:pointer;color:var(--muted);font-weight:600;font-size:.82rem;display:grid;justify-items:center;gap:2px}
@@ -196,6 +220,34 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
       <div><span>Başlangıç</span><b class="num" id="sBudget">—</b></div>
       <div><span>Bu ay gelen</span><b class="num" id="sIncome">0,00 €</b></div>
       <div><span>Bu ay harcanan</span><b class="num" id="sSpent">0,00 €</b></div>
+    </div>
+  </section>
+
+  <section class="card" id="limitCard">
+    <div class="limit-head">
+      <h2>Harcama limiti <span class="de">Ausgabenlimit</span></h2>
+      <button type="button" class="link-btn" id="limitBtn">Limit koy</button>
+    </div>
+    <form class="limit-form" id="limitForm" hidden>
+      <input class="field" id="limitInput" inputmode="decimal" placeholder="Aylık limit, ör. 600" aria-label="Aylık harcama limiti (€)">
+      <button type="submit">Kaydet</button>
+    </form>
+    <div id="limitEmpty">
+      <p class="limit-note">Ayda en fazla ne kadar harcamak istiyorsun? Limit koy, uygulama sana her gün ne kadar harcayabileceğini söylesin. Kira ve faturalar sabit gider olduğu için limite dahil değil.</p>
+    </div>
+    <div id="limitBody" hidden>
+      <div class="limit-head">
+        <div class="today">
+          <span class="k" id="todayK">Bugün harcayabileceğin</span>
+          <span class="v num" id="todayV">—</span>
+          <span class="s" id="todayS"></span>
+        </div>
+        <span class="pill" id="limitPill">—</span>
+      </div>
+      <div class="mbar" aria-hidden="true"><i id="mFill" style="width:0%"></i><b id="mPace" style="left:0%"></b></div>
+      <div class="mline"><span>Bu ay <strong class="num" id="mSpent">0 €</strong> / <span class="num" id="mLimit">0 €</span></span><span id="mLeft"></span></div>
+      <div class="streak" id="streak" hidden><b class="num" id="streakN">0</b><span id="streakT"></span></div>
+      <p class="limit-note">Kira ve faturalar hariç · Çizgi: bugüne kadar harcaman gereken tutar</p>
     </div>
   </section>
 
@@ -304,7 +356,7 @@ function parseEuro(s){
   return Number.isFinite(v)?Math.round(v*100):NaN;
 }
 
-let month=today().slice(0,7), mode="out", selCat="market", selInCat="maas", budget=0, expenses=[];
+let month=today().slice(0,7), mode="out", selCat="market", selInCat="maas", budget=0, limit=0, limitSince="", expenses=[];
 let store=null;
 
 /* ---- storage: claude db (synced) with a localStorage fallback ---- */
@@ -313,11 +365,12 @@ function localStore(){
   const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{budget:0,expenses:[]}}catch{return {budget:0,expenses:[]}}};
   const save=s=>{try{localStorage.setItem(KEY,JSON.stringify(s))}catch{}};
   let subs=[],psubs=[];
-  const emit=()=>{const s=load();subs.forEach(([m,cb])=>cb(s.expenses.filter(e=>e.month===m)));psubs.forEach(cb=>cb({budget:s.budget}))};
+  const emit=()=>{const s=load();subs.forEach(([m,cb])=>cb(s.expenses.filter(e=>e.month===m)));psubs.forEach(cb=>cb({budget:s.budget,limit:s.limit||0,limitSince:s.limitSince||""}))};
   return{
     synced:false,
     watchMonth(m,cb){const e=[m,cb];subs.push(e);cb(load().expenses.filter(x=>x.month===m));return()=>{subs=subs.filter(x=>x!==e)}},
-    watchProfile(cb){psubs.push(cb);cb({budget:load().budget})},
+    watchProfile(cb){psubs.push(cb);const s=load();cb({budget:s.budget,limit:s.limit||0,limitSince:s.limitSince||""})},
+    async setLimit(l){const s=load();if(!s.limitSince||!s.limit)s.limitSince=today();s.limit=l;save(s);emit()},
     async add(x){const s=load();s.expenses.push({...x,id:Math.random().toString(36).slice(2)});save(s);emit()},
     async remove(id){const s=load();s.expenses=s.expenses.filter(e=>e.id!==id);save(s);emit()},
     async setBudget(b){const s=load();s.budget=b;save(s);emit()},
@@ -352,6 +405,7 @@ function render(){
   $("budgetBtn").textContent=budget>0?"Başlangıcı değiştir":"Başlangıç parası";
   $("sIncome").textContent="+"+eur(income);
   $("sSpent").textContent="−"+eur(spent);
+  renderLimit();
 
   // categories
   const by={};outs.forEach(e=>by[e.cat]=(by[e.cat]||0)+e.amount);
@@ -415,7 +469,13 @@ $("addForm").addEventListener("submit",async e=>{
     await store.add({type:mode==="in"?"income":"expense",amount,cat:mode==="in"?selInCat:selCat,note:$("note").value.trim(),date,month:date.slice(0,7),createdAt:Date.now()});
     $("amount").value="";$("note").value="";
     if(date.slice(0,7)!==month){month=date.slice(0,7);watch()}
-    toast(mode==="in"?`+${eur(amount)} eklendi, bakiye arttı`:`${eur(amount)} eklendi`);
+    let msg=mode==="in"?`+${eur(amount)} eklendi, bakiye arttı`:`${eur(amount)} eklendi`;
+    if(mode==="out"&&limit>0&&!FIXED.has(selCat)&&date===today()){
+      const st=limitState(store.all(),date.slice(0,7),date);
+      if(st.todayLeft<0)msg=`Dikkat: bugünkü limiti ${eur(-st.todayLeft)} aştın`;
+      else msg+=` · bugün ${eur(st.todayLeft)} kaldı`;
+    }
+    toast(msg);
     $("amount").focus();
   }catch(err){$("err").textContent="Kaydedilemedi ("+(err?.code||"hata")+"). Tekrar dene."}
 });
@@ -457,7 +517,7 @@ $("importFile").onchange=async e=>{
   try{
     const s=JSON.parse(await f.text());
     if(!Array.isArray(s.expenses))throw 0;
-    localStorage.setItem("cuzdan-v1",JSON.stringify({budget:+s.budget||0,expenses:s.expenses}));
+    localStorage.setItem("cuzdan-v1",JSON.stringify({budget:+s.budget||0,limit:+s.limit||0,limitSince:s.limitSince||"",expenses:s.expenses}));
     location.reload();
   }catch{toast("Bu dosya bir Cüzdan yedeği değil")}
   e.target.value="";
@@ -554,9 +614,92 @@ function showTab(t){
 $("tabMoney").onclick=()=>showTab("money");
 $("tabTips").onclick=()=>showTab("tips");
 
+/* ---- spending limit ---- */
+const FIXED=new Set(["kira","fatura"]);
+const counts=e=>!isIn(e)&&!FIXED.has(e.cat);
+function dayStr(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+// what's left for today: the month's remaining limit spread over the remaining days, minus what was already spent today
+function limitState(all,m,todayStr){
+  const [y,mo]=m.split("-").map(Number);
+  const dim=new Date(y,mo,0).getDate();
+  const inMonth=all.filter(e=>e.month===m&&counts(e));
+  const spent=inMonth.reduce((a,e)=>a+e.amount,0);
+  const cur=todayStr.slice(0,7);
+  const st={dim,spent,left:limit-spent,kind:m===cur?"now":m<cur?"past":"future"};
+  if(st.kind==="now"){
+    const day=+todayStr.slice(8);
+    const before=inMonth.filter(e=>e.date<todayStr).reduce((a,e)=>a+e.amount,0);
+    const todaySpent=inMonth.filter(e=>e.date===todayStr).reduce((a,e)=>a+e.amount,0);
+    const allowance=Math.floor((limit-before)/(dim-day+1));
+    Object.assign(st,{day,todaySpent,allowance,todayLeft:allowance-todaySpent,pace:Math.round(limit*day/dim)});
+  }
+  return st;
+}
+// days in a row (up to yesterday) whose spending stayed within the plain daily limit
+function streakDays(all,todayStr){
+  if(!limitSince)return 0;
+  const by={};all.filter(counts).forEach(e=>by[e.date]=(by[e.date]||0)+e.amount);
+  let n=0;const d=new Date(todayStr+"T12:00:00");d.setDate(d.getDate()-1);
+  for(let i=0;i<366;i++){
+    const ds=dayStr(d);if(ds<limitSince)break;
+    const dim=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+    if((by[ds]||0)>limit/dim)break;
+    n++;d.setDate(d.getDate()-1);
+  }
+  return n;
+}
+function renderLimit(){
+  const has=limit>0;
+  $("limitEmpty").hidden=has;$("limitBody").hidden=!has;
+  $("limitBtn").textContent=has?"Değiştir":"Limit koy";
+  if(!has)return;
+  const all=store?store.all():expenses, t=today();
+  const st=limitState(all,month,t);
+  $("mSpent").textContent=eur(st.spent);$("mLimit").textContent=eur(limit);
+  const pct=st.spent/limit*100;
+  let cls="good",pill="Plan dahilinde";
+  if(st.kind==="now"){
+    if(st.spent>limit){cls="bad";pill="Limit aşıldı"}
+    else if(st.spent>st.pace*1.1){cls="warn";pill="Hızlı gidiyorsun"}
+    $("todayK").textContent="Bugün harcayabileceğin";
+    const v=$("todayV");v.className="v num"+(st.todayLeft<0?" bad":st.todayLeft<st.allowance*0.25?" warn":"");
+    v.textContent=st.todayLeft<0?"−"+eur(-st.todayLeft):eur(Math.max(0,st.todayLeft));
+    $("todayS").textContent=st.todayLeft<0?`Bugünkü limiti ${eur(-st.todayLeft)} aştın. Yarın biraz daha az harca.`:`Günlük ${eur(Math.max(0,st.allowance))} · bugün ${eur(st.todaySpent)} harcadın`;
+    $("mPace").style.left=Math.min(100,st.pace/limit*100)+"%";$("mPace").hidden=false;
+    $("mLeft").textContent=st.left>=0?`Kalan ${eur(st.left)} · ${st.dim-st.day+1} gün`:`${eur(-st.left)} fazla`;
+    const n=streakDays(all,t);
+    $("streak").hidden=n<1;$("streakN").textContent=n;
+    $("streakT").textContent=n===1?"gündür günlük limitin içindesin. Devam!":`gündür üst üste günlük limitin içindesin 🔥`;
+  }else if(st.kind==="past"){
+    const before=limitSince&&month<limitSince.slice(0,7);
+    if(before){cls="";pill="Limit yoktu"}
+    else if(st.spent>limit){cls="bad";pill="Aşıldı"}else pill="Limit tutuldu ✓";
+    $("todayK").textContent=st.spent>limit?"Limiti aştın":"Bu ay biriktirdiğin";
+    $("todayV").className="v num"+(st.spent>limit?" bad":"");
+    $("todayV").textContent=eur(Math.abs(limit-st.spent));
+    $("todayS").textContent=st.spent>limit?"Bu ay limitten fazla harcandı.":"Limitin altında kaldın, helal olsun.";
+    $("mPace").hidden=true;$("mLeft").textContent="";$("streak").hidden=true;
+  }else{
+    pill="Gelecek ay";cls="";
+    $("todayK").textContent="Günlük ortalama";$("todayV").className="v num";
+    $("todayV").textContent=eur(Math.floor(limit/st.dim));$("todayS").textContent="";
+    $("mPace").hidden=true;$("mLeft").textContent="";$("streak").hidden=true;
+  }
+  const p=$("limitPill");p.textContent=pill;p.className="pill "+cls;
+  const f=$("mFill");f.style.width=Math.min(100,pct)+"%";f.className=cls==="good"||!cls?"":cls;
+}
+$("limitBtn").onclick=()=>{const f=$("limitForm");f.hidden=!f.hidden;if(!f.hidden){$("limitInput").value=limit?(limit/100).toString().replace(".",","):"";$("limitInput").focus()}};
+$("limitForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const v=parseEuro($("limitInput").value);
+  if(!(v>=0)||$("limitInput").value.trim()===""){$("limitInput").focus();return}
+  await store.setLimit(v);limit=v;$("limitForm").hidden=true;render();
+  toast(v>0?`Aylık limit ${eur(v)} · günlük ~${eur(Math.floor(v/30))}`:"Limit kaldırıldı");
+});
+
 /* ---- boot ---- */
 store=localStore();
-store.watchProfile(p=>{budget=p?.budget||0;render()});
+store.watchProfile(p=>{budget=p?.budget||0;limit=p?.limit||0;limitSince=p?.limitSince||"";render()});
 watch();
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
