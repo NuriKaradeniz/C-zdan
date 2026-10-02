@@ -6,4 +6,4 @@ Almanya'daki harcamalarımı takip ettiğim iPhone uygulaması.
 - Kategorilere göre harcamalar (Türkçe + Almanca)
 - İnternetsiz çalışır, veriler sadece telefonda kalır
 
-Uygulama: https://nurikaradeniz.github.io/c-zdan/
+Uygulama: https://nurikaradeniz.github.io/C-zdan/
