@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cüzdan</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cüzdan">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#eef1f6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1220" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+/* Layout: one narrow phone-first column — remaining money on top, quick-add form, category bars, then a receipt-style list */
+:root{
+  --bg:#eef1f6; --surface:#ffffff; --ink:#141a2b; --muted:#5d6680; --line:#d9deea;
+  --accent:#2747d4; --accent-ink:#ffffff; --accent-soft:#e3e8fb;
+  --good:#1d8a5a; --warn:#b86e00; --bad:#c2332b; --bad-soft:#fbe6e4;
+  --receipt:#fbfbf8;
+  --f-display:ui-sans-serif,system-ui,sans-serif;
+  --f-body:ui-sans-serif,system-ui,sans-serif;
+  --f-mono:ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1220; --surface:#171c2e; --ink:#e8ebf5; --muted:#98a1bb; --line:#2a3149;
+  --accent:#7d96ff; --accent-ink:#0e1220; --accent-soft:#222c52;
+  --good:#4cc68c; --warn:#f0a83a; --bad:#ff6f66; --bad-soft:#3a1f22;
+  --receipt:#1b2134; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0e1220; --surface:#171c2e; --ink:#e8ebf5; --muted:#98a1bb; --line:#2a3149;
+  --accent:#7d96ff; --accent-ink:#0e1220; --accent-soft:#222c52;
+  --good:#4cc68c; --warn:#f0a83a; --bad:#ff6f66; --bad-soft:#3a1f22;
+  --receipt:#1b2134; color-scheme:dark }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);overscroll-behavior-y:none}
+input,select{font-size:16px!important}
+[hidden]{display:none!important}
+.backup{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.backup button,.backup label{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-size:.85rem;cursor:pointer}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:grid;gap:18px}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.de{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);letter-spacing:.02em}
+.num{font-variant-numeric:tabular-nums}
+
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-family:var(--f-display);font-weight:800;font-size:1.35rem;letter-spacing:-.01em}
+.brand small{display:block;font-family:var(--f-mono);font-weight:400;font-size:.7rem;color:var(--muted);letter-spacing:.04em}
+.month{display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.month button{border:0;background:none;width:32px;height:32px;border-radius:999px;cursor:pointer;font-size:1.1rem;color:var(--muted)}
+.month button:hover{background:var(--accent-soft);color:var(--ink)}
+.month span{min-width:104px;text-align:center;font-weight:600;font-size:.9rem}
+
+/* hero */
+.hero{background:var(--accent);color:var(--accent-ink);border-radius:20px;padding:20px 20px 18px;display:grid;gap:14px;position:relative;overflow:hidden}
+.hero.over{background:var(--bad)}
+.hero .label{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;opacity:.85}
+.hero .big{font-family:var(--f-display);font-weight:800;font-size:clamp(2.6rem,12vw,3.6rem);line-height:1;letter-spacing:-.02em}
+.bar{height:10px;border-radius:99px;background:color-mix(in srgb,var(--accent-ink) 22%,transparent);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent-ink);border-radius:99px;transition:width .4s ease}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:.78rem}
+.stats b{display:block;font-family:var(--f-mono);font-weight:600;font-size:.95rem}
+.stats span{opacity:.85}
+.hero-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.budget-btn{flex:none;border:1px solid color-mix(in srgb,var(--accent-ink) 40%,transparent);background:none;color:var(--accent-ink);border-radius:999px;padding:4px 12px;font-size:.78rem;cursor:pointer}
+.budget-btn:hover{background:color-mix(in srgb,var(--accent-ink) 14%,transparent)}
+.budget-form{display:flex;gap:8px;flex-wrap:wrap}
+.budget-form input{flex:1;min-width:0;border-radius:10px;border:0;padding:10px 12px;background:var(--surface);color:var(--ink);font-family:var(--f-mono)}
+.budget-form button{border:0;border-radius:10px;padding:10px 16px;background:var(--surface);color:var(--ink);font-weight:600;cursor:pointer}
+
+/* add form */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:12px}
+h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;display:flex;align-items:baseline;gap:8px;text-wrap:balance}
+.amount-row{display:flex;align-items:center;gap:8px;border-bottom:2px solid var(--line);padding-bottom:4px}
+.amount-row:focus-within{border-color:var(--accent)}
+.amount-row input{flex:1;min-width:0;border:0;background:none;font-family:var(--f-display);font-weight:800;font-size:2rem;padding:2px 0;outline:none}
+.amount-row .eur{font-family:var(--f-display);font-weight:800;font-size:2rem;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:6px 10px;cursor:pointer;display:grid;line-height:1.2;text-align:left}
+.chip .tr{font-size:.85rem;font-weight:600}
+.chip .de{font-size:.66rem}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip[aria-pressed="true"] .de{color:var(--accent-ink);opacity:.8}
+.row2{display:grid;grid-template-columns:1fr 150px;gap:8px}
+@media (max-width:420px){.row2{grid-template-columns:1fr}}
+.field{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+.primary{border:0;border-radius:12px;padding:13px;background:var(--ink);color:var(--bg);font-weight:600;font-size:1rem;cursor:pointer}
+.primary:hover{opacity:.9}
+.err{color:var(--bad);font-size:.85rem;margin:0}
+.err:empty{display:none}
+
+/* categories */
+.cats{display:grid;gap:10px}
+.cat{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:baseline}
+.cat .name{font-weight:600;font-size:.9rem}
+.cat .name .de{margin-left:6px}
+.cat .amt{font-family:var(--f-mono);font-size:.88rem}
+.cat .track{grid-column:1/-1;height:6px;background:var(--bg);border-radius:99px;overflow:hidden}
+.cat .track i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.cat .pct{color:var(--muted);font-size:.78rem;margin-left:6px}
+.tip{background:var(--accent-soft);border-radius:10px;padding:10px 12px;font-size:.88rem}
+
+/* receipt list */
+.receipt{background:var(--receipt);border:1px solid var(--line);border-radius:4px;padding:16px 16px 20px;font-family:var(--f-mono);font-size:.85rem;
+  -webkit-mask:radial-gradient(circle 6px at 50% 100%,#0000 98%,#000) 0 0/16px 100% repeat-x;mask:radial-gradient(circle 6px at 50% 100%,#0000 98%,#000) 0 0/16px 100% repeat-x;padding-bottom:26px}
+.receipt h3{margin:0 0 4px;text-align:center;font-size:.8rem;letter-spacing:.2em;font-weight:600}
+.receipt .sub{text-align:center;color:var(--muted);font-size:.72rem;margin-bottom:10px}
+.day{color:var(--muted);font-size:.72rem;margin:12px 0 4px;border-top:1px dashed var(--line);padding-top:8px}
+.item{display:grid;grid-template-columns:1fr auto 30px;gap:8px;align-items:center;padding:3px 0}
+.item .what{min-width:0;overflow-wrap:anywhere}
+.item .what small{color:var(--muted);display:block;font-size:.72rem}
+.item .price{font-weight:600}
+.del{border:0;background:none;cursor:pointer;color:var(--muted);width:30px;height:28px;border-radius:6px;font-size:.9rem}
+.del:hover{background:var(--bad-soft);color:var(--bad)}
+.del.confirm{width:auto;padding:0 6px;background:var(--bad);color:#fff;font-size:.72rem;font-weight:600}
+.item:has(.del.confirm){grid-template-columns:1fr auto auto}
+.total{display:flex;justify-content:space-between;border-top:2px solid var(--ink);margin-top:12px;padding-top:8px;font-weight:600}
+.empty{text-align:center;color:var(--muted);padding:18px 8px;font-family:var(--f-body)}
+.status{font-size:.75rem;color:var(--muted);text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">Cüzdan<small>MEIN GELDBEUTEL</small></div>
+    <div class="month">
+      <button id="prev" aria-label="Önceki ay">‹</button>
+      <span id="monthLabel" class="num">—</span>
+      <button id="next" aria-label="Sonraki ay">›</button>
+    </div>
+  </header>
+
+  <section class="hero" id="hero">
+    <div>
+      <div class="hero-top"><div class="label" id="heroLabel">Kalan para · Restbetrag</div><button class="budget-btn" id="budgetBtn">Bütçe ayarla</button></div>
+      <div class="big num" id="remaining">0,00 €</div>
+    </div>
+    <form class="budget-form" id="budgetForm" hidden>
+      <input id="budgetInput" inputmode="decimal" placeholder="Aylık bütçe, ör. 1200" aria-label="Aylık bütçe (€)">
+      <button type="submit">Kaydet</button>
+    </form>
+    <div class="bar" aria-hidden="true"><i id="barFill" style="width:0%"></i></div>
+    <div class="stats">
+      <div><span>Bütçe</span><b class="num" id="sBudget">—</b></div>
+      <div><span>Harcanan</span><b class="num" id="sSpent">0,00 €</b></div>
+      <div><span>Günlük limit</span><b class="num" id="sDaily">—</b></div>
+    </div>
+  </section>
+
+  <form class="card" id="addForm" autocomplete="off">
+    <h2>Harcama ekle <span class="de">Ausgabe hinzufügen</span></h2>
+    <label class="amount-row">
+      <input id="amount" inputmode="decimal" placeholder="0,00" aria-label="Tutar (€)">
+      <span class="eur">€</span>
+    </label>
+    <div class="chips" id="chips" role="group" aria-label="Kategori"></div>
+    <div class="row2">
+      <input class="field" id="note" placeholder="Not (ör. Lidl, Deutschlandticket)" maxlength="80" aria-label="Not">
+      <input class="field" id="date" type="date" aria-label="Tarih">
+    </div>
+    <p class="err" id="err"></p>
+    <button class="primary" type="submit">Ekle · Hinzufügen</button>
+  </form>
+
+  <section class="card">
+    <h2>Para nereye gitti? <span class="de">Wofür?</span></h2>
+    <div class="cats" id="cats"></div>
+    <div class="tip" id="tip" hidden></div>
+  </section>
+
+  <section class="receipt" aria-label="Harcama listesi">
+    <h3>KASSENBON</h3>
+    <div class="sub" id="receiptSub">—</div>
+    <div id="list"></div>
+    <div class="total"><span>SUMME</span><span class="num" id="listTotal">0,00 €</span></div>
+  </section>
+
+  <section class="card">
+    <h2>Yedek <span class="de">Sicherung</span></h2>
+    <p style="margin:0;font-size:.88rem;color:var(--muted)">Veriler sadece bu telefonda duruyor. Ayda bir yedek al, telefon değişirse geri yüklersin.</p>
+    <div class="backup">
+      <button type="button" id="exportBtn">Yedek al</button>
+      <label for="importFile">Yedeği geri yükle</label>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+  </section>
+  <div class="status" id="status">İnternetsiz çalışır · Offline</div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+
+<script>
+const CATS=[
+  {id:"kira",tr:"Kira",de:"Miete"},
+  {id:"market",tr:"Market",de:"Lebensmittel"},
+  {id:"disari",tr:"Dışarıda yemek",de:"Essen gehen"},
+  {id:"ulasim",tr:"Ulaşım",de:"Verkehr"},
+  {id:"fatura",tr:"Fatura & Telefon",de:"Rechnungen"},
+  {id:"saglik",tr:"Sağlık",de:"Gesundheit"},
+  {id:"giyim",tr:"Giyim",de:"Kleidung"},
+  {id:"eglence",tr:"Eğlence",de:"Freizeit"},
+  {id:"kurs",tr:"Almanca kursu",de:"Sprachkurs"},
+  {id:"diger",tr:"Diğer",de:"Sonstiges"}
+];
+const catById=Object.fromEntries(CATS.map(c=>[c.id,c]));
+const AYLAR=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+const MONATE=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const eur=c=>(c/100).toLocaleString("de-DE",{style:"currency",currency:"EUR"});
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,"0");
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
+function parseEuro(s){
+  s=String(s||"").trim().replace(/\s|€/g,"");
+  if(!s)return NaN;
+  if(s.includes(",")) s=s.replace(/\./g,"").replace(",",".");
+  const v=Number(s);
+  return Number.isFinite(v)?Math.round(v*100):NaN;
+}
+
+let month=today().slice(0,7), selCat="market", budget=0, expenses=[];
+let store=null;
+
+/* ---- storage: claude db (synced) with a localStorage fallback ---- */
+function localStore(){
+  const KEY="cuzdan-v1";
+  const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{budget:0,expenses:[]}}catch{return {budget:0,expenses:[]}}};
+  const save=s=>{try{localStorage.setItem(KEY,JSON.stringify(s))}catch{}};
+  let subs=[],psubs=[];
+  const emit=()=>{const s=load();subs.forEach(([m,cb])=>cb(s.expenses.filter(e=>e.month===m)));psubs.forEach(cb=>cb({budget:s.budget}))};
+  return{
+    synced:false,
+    watchMonth(m,cb){const e=[m,cb];subs.push(e);cb(load().expenses.filter(x=>x.month===m));return()=>{subs=subs.filter(x=>x!==e)}},
+    watchProfile(cb){psubs.push(cb);cb({budget:load().budget})},
+    async add(x){const s=load();s.expenses.push({...x,id:Math.random().toString(36).slice(2)});save(s);emit()},
+    async remove(id){const s=load();s.expenses=s.expenses.filter(e=>e.id!==id);save(s);emit()},
+    async setBudget(b){const s=load();s.budget=b;save(s);emit()}
+  };
+}
+let unsubMonth=null;
+function watch(){
+  if(unsubMonth)unsubMonth();
+  unsubMonth=store.watchMonth(month,list=>{expenses=list;render()});
+}
+
+/* ---- render ---- */
+function render(){
+  const [y,m]=month.split("-").map(Number);
+  $("monthLabel").textContent=`${AYLAR[m-1]} ${y}`;
+  $("receiptSub").textContent=`${MONATE[m-1]} ${y} · ${expenses.length} Posten`;
+  const spent=expenses.reduce((a,e)=>a+(e.amount||0),0);
+  const rem=budget-spent;
+  const hero=$("hero");
+  if(budget>0){
+    $("remaining").textContent=eur(rem);
+    hero.classList.toggle("over",rem<0);
+    $("heroLabel").textContent=rem<0?"Bütçeyi aştın · Überzogen":"Kalan para · Restbetrag";
+    $("barFill").style.width=Math.max(0,Math.min(100,rem/budget*100))+"%";
+    $("sBudget").textContent=eur(budget);
+    $("budgetBtn").textContent="Bütçeyi değiştir";
+  }else{
+    $("remaining").textContent=eur(-spent);
+    hero.classList.remove("over");
+    $("heroLabel").textContent="Önce aylık bütçeni gir →";
+    $("barFill").style.width="0%";
+    $("sBudget").textContent="—";
+    $("budgetBtn").textContent="Bütçe ayarla";
+  }
+  $("sSpent").textContent=eur(spent);
+  // daily limit: remaining spread over the days left this month
+  const now=new Date(), daysInMonth=new Date(y,m,0).getDate();
+  const isThis=month===today().slice(0,7), isPast=month<today().slice(0,7);
+  const daysLeft=isThis?daysInMonth-now.getDate()+1:isPast?0:daysInMonth;
+  $("sDaily").textContent=budget>0&&daysLeft>0?eur(Math.max(0,Math.floor(rem/daysLeft))):"—";
+
+  // categories
+  const by={};expenses.forEach(e=>by[e.cat]=(by[e.cat]||0)+e.amount);
+  const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]);
+  const max=rows[0]?.[1]||1;
+  $("cats").innerHTML=rows.length?rows.map(([c,v])=>{const k=catById[c]||catById.diger;return `<div class="cat"><div class="name">${k.tr}<span class="de">${k.de}</span></div><div class="amt num">${eur(v)}<span class="pct">${Math.round(v/spent*100)}%</span></div><div class="track"><i style="width:${v/max*100}%"></i></div></div>`}).join(""):`<div class="empty">Bu ay henüz harcama yok. İlk harcamanı yukarıdan ekle, burada kategorilere göre göreceksin.</div>`;
+  const tip=$("tip");
+  if(rows.length&&spent>0){
+    const [c,v]=rows[0];const k=catById[c]||catById.diger;
+    tip.hidden=false;
+    tip.textContent=`En çok para ${k.tr} için gitti (${eur(v)}). Burada %10 kısarsan ayda ${eur(Math.round(v*0.1))} kenarda kalır.`;
+  }else tip.hidden=true;
+
+  // receipt
+  const sorted=[...expenses].sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt||0)-(a.createdAt||0));
+  let html="",lastDay="";
+  for(const e of sorted){
+    if(e.date!==lastDay){lastDay=e.date;const [yy,mm,dd]=e.date.split("-");const dt=new Date(+yy,+mm-1,+dd);html+=`<div class="day">${dd}.${mm}.${yy} · ${dt.toLocaleDateString("tr-TR",{weekday:"long"})}</div>`}
+    const k=catById[e.cat]||catById.diger;
+    html+=`<div class="item"><div class="what">${esc(e.note||k.tr)}<small>${k.tr} · ${k.de}</small></div><div class="price num">${eur(e.amount)}</div><button class="del" data-id="${esc(e.id)}" aria-label="Sil">✕</button></div>`;
+  }
+  $("list").innerHTML=html||`<div class="empty">Fiş boş. Harcama ekledikçe buraya yazılacak.</div>`;
+  $("listTotal").textContent=eur(spent);
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function setStatus(t){$("status").textContent=t}
+let toastT;function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove("show"),1800)}
+
+/* ---- UI wiring ---- */
+$("chips").innerHTML=CATS.map(c=>`<button type="button" class="chip" data-cat="${c.id}" aria-pressed="${c.id===selCat}"><span class="tr">${c.tr}</span><span class="de">${c.de}</span></button>`).join("");
+$("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;selCat=b.dataset.cat;document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+$("date").value=today();
+
+$("addForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  if(!store)return;
+  const amount=parseEuro($("amount").value);
+  if(!(amount>0)){$("err").textContent="Tutarı yaz, ör. 12,50";$("amount").focus();return}
+  const date=$("date").value||today();
+  $("err").textContent="";
+  try{
+    await store.add({amount,cat:selCat,note:$("note").value.trim(),date,month:date.slice(0,7),createdAt:Date.now()});
+    $("amount").value="";$("note").value="";
+    if(date.slice(0,7)!==month){month=date.slice(0,7);watch()}
+    toast(`${eur(amount)} eklendi`);
+    $("amount").focus();
+  }catch(err){$("err").textContent="Kaydedilemedi ("+(err?.code||"hata")+"). Tekrar dene."}
+});
+
+$("list").addEventListener("click",async e=>{
+  const b=e.target.closest(".del");if(!b)return;
+  if(!b.classList.contains("confirm")){
+    b.classList.add("confirm");b.textContent="Sil?";
+    setTimeout(()=>{if(b.isConnected){b.classList.remove("confirm");b.textContent="✕"}},3000);
+    return;
+  }
+  try{await store.remove(b.dataset.id);toast("Silindi")}catch{toast("Silinemedi, tekrar dene")}
+});
+
+$("budgetBtn").addEventListener("click",()=>{const f=$("budgetForm");f.hidden=!f.hidden;if(!f.hidden){$("budgetInput").value=budget?(budget/100).toString().replace(".",","):"";$("budgetInput").focus()}});
+$("budgetForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const b=parseEuro($("budgetInput").value);
+  if(!(b>0)){$("budgetInput").focus();return}
+  try{await store.setBudget(b);budget=b;$("budgetForm").hidden=true;render();toast("Bütçe kaydedildi")}catch{toast("Kaydedilemedi")}
+});
+
+function shiftMonth(d){const [y,m]=month.split("-").map(Number);const dt=new Date(y,m-1+d,1);month=`${dt.getFullYear()}-${pad(dt.getMonth()+1)}`;watch()}
+$("prev").onclick=()=>shiftMonth(-1);
+$("next").onclick=()=>shiftMonth(1);
+
+/* ---- backup ---- */
+$("exportBtn").onclick=async()=>{
+  let data;try{data=localStorage.getItem("cuzdan-v1")||'{"budget":0,"expenses":[]}'}catch{data='{"budget":0,"expenses":[]}'}
+  const name=`cuzdan-yedek-${today()}.json`;
+  const file=new File([data],name,{type:"application/json"});
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return}
+  }catch(e){if(e.name==="AbortError")return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;a.click();
+};
+$("importFile").onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{
+    const s=JSON.parse(await f.text());
+    if(!Array.isArray(s.expenses))throw 0;
+    localStorage.setItem("cuzdan-v1",JSON.stringify({budget:+s.budget||0,expenses:s.expenses}));
+    location.reload();
+  }catch{toast("Bu dosya bir Cüzdan yedeği değil")}
+  e.target.value="";
+};
+
+/* ---- boot ---- */
+store=localStore();
+store.watchProfile(p=>{budget=p?.budget||0;render()});
+watch();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
