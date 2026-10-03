@@ -196,6 +196,25 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .2s}
 .toast.show{opacity:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* confirmation popup */
+.done{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px 16px;background:color-mix(in srgb,var(--ink) 35%,transparent);opacity:0;transition:opacity .18s}
+.done.show{opacity:1}
+.done-card{width:min(100%,320px);background:var(--surface);border-radius:22px;padding:24px 20px 18px;display:grid;justify-items:center;gap:6px;text-align:center;box-shadow:0 20px 50px color-mix(in srgb,var(--ink) 30%,transparent);transform:scale(.92);transition:transform .2s cubic-bezier(.2,1.4,.4,1)}
+.done.show .done-card{transform:scale(1)}
+.done-ic{width:58px;height:58px;border-radius:50%;padding:14px;background:var(--accent);color:var(--accent-ink);margin-bottom:6px}
+.done-ic svg{stroke-width:3}
+.done.in .done-ic{background:var(--good);color:#fff}
+.done.warn .done-ic{background:var(--warn);color:#fff}
+.done-title{font-family:var(--f-display);font-weight:800;font-size:1.25rem}
+.done-amt{font-family:var(--f-display);font-weight:800;font-size:2.1rem;line-height:1.1;margin-top:6px}
+.done.in .done-amt{color:var(--good)}
+.done-cat{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.88rem}
+.done-cat .ic{width:16px;height:16px}
+.done-bal{font-size:.9rem;margin-top:8px}
+.done-extra{font-size:.88rem;background:var(--bg);border-radius:10px;padding:8px 12px;width:100%}
+.done.warn .done-extra{background:color-mix(in srgb,var(--warn) 16%,transparent)}
+.done-ok{margin-top:10px;width:100%;border:0;border-radius:12px;padding:12px;background:var(--ink);color:var(--bg);font-weight:600;font-size:1rem;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.done,.done-card{transition:none}}
 /* icons */
 .logo{width:40px;height:40px;border-radius:11px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none}
 .logo svg{width:22px!important;height:22px!important}
@@ -353,6 +372,18 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
   <button type="button" role="tab" id="tabTips" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.4 1 2.5h6c0-1.1.3-1.8 1-2.5A6 6 0 0 0 12 3z"/></svg>İpuçları</button>
 </nav>
 <div class="toast" id="toast" role="status"></div>
+<div class="done" id="done" hidden role="status" aria-live="polite">
+  <div class="done-card">
+    <span class="ic done-ic" id="doneIcon"></span>
+    <div class="done-title" id="doneTitle"></div>
+    <div class="de" id="doneDe"></div>
+    <div class="done-amt num" id="doneAmt"></div>
+    <div class="done-cat" id="doneCat"></div>
+    <div class="done-bal num" id="doneBal"></div>
+    <div class="done-extra" id="doneExtra" hidden></div>
+    <button type="button" class="done-ok">Tamam</button>
+  </div>
+</div>
 
 
 <script>
@@ -406,6 +437,8 @@ const ICONS={
   repeat:'<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
   bulb:'<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.4 1 2.5h6c0-1.1.3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',
   flame:'<path d="M12 22c4 0 7-2.7 7-7 0-4-3-6-4-9-1 2-2 3-3.5 3.5C11 7 11 4 12 2 8 4 5 8.5 5 15c0 4.3 3 7 7 7z"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  alert:'<path d="M12 3 2 21h20z"/><path d="M12 10v5M12 18h.01"/>',
   grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'
 };
 const svg=n=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||ICONS.dots}</svg>`;
@@ -532,13 +565,38 @@ drawChips();
 $("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;if(mode==="in")selInCat=b.dataset.cat;else selCat=b.dataset.cat;document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===b))});
 $("date").value=today();
 
+/* ---- confirmation popup ---- */
+let doneT=null;
+function showDone(amount,date){
+  const inc=mode==="in", cat=inc?selInCat:selCat, k=catById[cat]||catById.diger;
+  const all=store.all();
+  const bal=budget+all.reduce((a,e)=>a+(isIn(e)?e.amount:-e.amount),0);
+  let kind=inc?"in":"out", extra="";
+  if(!inc&&limit>0&&!FIXED.has(cat)&&date===today()){
+    const st=limitState(all,date.slice(0,7),date);
+    if(st.todayLeft<0){kind="warn";extra=`Bugünkü limiti <b>${eur(-st.todayLeft)}</b> aştın`}
+    else extra=`Bugün harcayabileceğin: <b>${eur(st.todayLeft)}</b>`;
+  }
+  const d=$("done");
+  d.className="done "+kind;
+  $("doneIcon").innerHTML=svg(kind==="warn"?"alert":"check");
+  $("doneTitle").textContent=inc?"Para eklendi":"Harcama eklendi";
+  $("doneDe").textContent=inc?"Einnahme gespeichert":"Ausgabe gespeichert";
+  $("doneAmt").textContent=(inc?"+":"−")+eur(amount);
+  $("doneCat").innerHTML=ic(CAT_IC[cat]||"dots")+`<span>${esc(k.tr)} · ${esc(k.de)}</span>`;
+  $("doneBal").innerHTML=`Güncel bakiye: <b>${eur(bal)}</b>`;
+  $("doneExtra").innerHTML=extra;$("doneExtra").hidden=!extra;
+  d.hidden=false;
+  requestAnimationFrame(()=>d.classList.add("show"));
+  clearTimeout(doneT);doneT=setTimeout(hideDone,kind==="warn"?4000:2500);
+}
+function hideDone(){const d=$("done");clearTimeout(doneT);d.classList.remove("show");setTimeout(()=>{if(!d.classList.contains("show"))d.hidden=true},200)}
+$("done").addEventListener("click",hideDone);
+
 $("addForm").addEventListener("submit",async e=>{
   e.preventDefault();
   if(!store)return;
-  let amount=parseEuro($("amount").value);
-  if(!(amount>0)&&!$("amount").value.trim()&&/^\s*\d+([.,]\d{1,2})?\s*€?\s*$/.test($("note").value)){
-    amount=parseEuro($("note").value);$("note").value="";
-  }
+  const amount=parseEuro($("amount").value);
   if(!(amount>0)){$("err").textContent="Tutarı en üstteki Tutar kutusuna yaz, ör. 12,50";$("amount").focus();return}
   const date=$("date").value||today();
   $("err").textContent="";
@@ -546,14 +604,8 @@ $("addForm").addEventListener("submit",async e=>{
     await store.add({type:mode==="in"?"income":"expense",amount,cat:mode==="in"?selInCat:selCat,note:$("note").value.trim(),date,month:date.slice(0,7),createdAt:Date.now()});
     $("amount").value="";$("note").value="";
     if(date.slice(0,7)!==month){month=date.slice(0,7);watch()}
-    let msg=mode==="in"?`+${eur(amount)} eklendi, bakiye arttı`:`${eur(amount)} eklendi`;
-    if(mode==="out"&&limit>0&&!FIXED.has(selCat)&&date===today()){
-      const st=limitState(store.all(),date.slice(0,7),date);
-      if(st.todayLeft<0)msg=`Dikkat: bugünkü limiti ${eur(-st.todayLeft)} aştın`;
-      else msg+=` · bugün ${eur(st.todayLeft)} kaldı`;
-    }
-    toast(msg);
-    $("amount").focus();
+    if(document.activeElement)document.activeElement.blur();
+    showDone(amount,date);
   }catch(err){$("err").textContent="Kaydedilemedi ("+(err?.code||"hata")+"). Tekrar dene."}
 });
 
