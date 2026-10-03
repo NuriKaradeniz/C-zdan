@@ -76,9 +76,11 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 /* add form */
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:12px}
 h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;display:flex;align-items:baseline;gap:8px;text-wrap:balance}
-.amount-row{display:flex;align-items:center;gap:8px;border-bottom:2px solid var(--line);padding-bottom:4px}
+.amount-wrap{display:grid;gap:6px}
+.amount-wrap .lbl{font-size:.82rem;font-weight:600;color:var(--muted)}
+.amount-row{display:flex;align-items:center;gap:8px;border:2px solid var(--line);background:var(--bg);border-radius:14px;padding:6px 14px;cursor:text}
 .amount-row:focus-within{border-color:var(--accent)}
-.amount-row input{flex:1;min-width:0;border:0;background:none;font-family:var(--f-display);font-weight:800;font-size:2rem;padding:2px 0;outline:none}
+.amount-row input{flex:1;min-width:0;border:0;background:none;color:var(--ink);font-family:var(--f-display);font-weight:800;font-size:2rem;padding:2px 0;outline:none}
 .amount-row .eur{font-family:var(--f-display);font-weight:800;font-size:2rem;color:var(--muted)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px}
@@ -98,8 +100,10 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
 .chip .de{font-size:.66rem}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .chip[aria-pressed="true"] .de{color:var(--accent-ink);opacity:.8}
-.row2{display:grid;grid-template-columns:1fr 150px;gap:8px}
-@media (max-width:420px){.row2{grid-template-columns:1fr}}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,150px);gap:8px}
+@media (max-width:480px){.row2{grid-template-columns:minmax(0,1fr)}}
+#date{-webkit-appearance:none;appearance:none;min-height:44px;text-align:left;display:block}
+#date::-webkit-date-and-time-value{text-align:left}
 .field{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
 .primary{border:0;border-radius:12px;padding:13px;background:var(--ink);color:var(--bg);font-weight:600;font-size:1rem;cursor:pointer}
 .primary:hover{opacity:.9}
@@ -284,13 +288,16 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
       <button type="button" id="modeOut" aria-pressed="true"><i class="ic" data-ic="arrowOut"></i>Harcama<small>Ausgabe</small></button>
       <button type="button" id="modeIn" aria-pressed="false"><i class="ic" data-ic="arrowIn"></i>Para ekle<small>Einnahme</small></button>
     </div>
-    <label class="amount-row">
-      <input id="amount" inputmode="decimal" placeholder="0,00" aria-label="Tutar (€)">
-      <span class="eur">€</span>
-    </label>
+    <div class="amount-wrap">
+      <label class="lbl" for="amount">Tutar · Betrag</label>
+      <label class="amount-row">
+        <input id="amount" inputmode="decimal" placeholder="0,00" autocomplete="off">
+        <span class="eur">€</span>
+      </label>
+    </div>
     <div class="chips" id="chips" role="group" aria-label="Kategori"></div>
     <div class="row2">
-      <input class="field" id="note" placeholder="Not (ör. Lidl, Deutschlandticket)" maxlength="80" aria-label="Not">
+      <input class="field" id="note" placeholder="Not, isteğe bağlı (ör. Lidl)" maxlength="80" aria-label="Not">
       <input class="field" id="date" type="date" aria-label="Tarih">
     </div>
     <p class="err" id="err"></p>
@@ -515,7 +522,7 @@ function setMode(m){
   $("modeOut").setAttribute("aria-pressed",m==="out");
   $("modeIn").setAttribute("aria-pressed",m==="in");
   $("submitBtn").textContent=m==="in"?"+ Parayı ekle":"Harcamayı ekle";
-  $("note").placeholder=m==="in"?"Not (ör. Ekim maaşı, bahşiş)":"Not (ör. Lidl, Deutschlandticket)";
+  $("note").placeholder=m==="in"?"Not, isteğe bağlı (ör. Ekim maaşı)":"Not, isteğe bağlı (ör. Lidl)";
   $("err").textContent="";
   drawChips();
 }
@@ -528,8 +535,11 @@ $("date").value=today();
 $("addForm").addEventListener("submit",async e=>{
   e.preventDefault();
   if(!store)return;
-  const amount=parseEuro($("amount").value);
-  if(!(amount>0)){$("err").textContent="Tutarı yaz, ör. 12,50";$("amount").focus();return}
+  let amount=parseEuro($("amount").value);
+  if(!(amount>0)&&!$("amount").value.trim()&&/^\s*\d+([.,]\d{1,2})?\s*€?\s*$/.test($("note").value)){
+    amount=parseEuro($("note").value);$("note").value="";
+  }
+  if(!(amount>0)){$("err").textContent="Tutarı en üstteki Tutar kutusuna yaz, ör. 12,50";$("amount").focus();return}
   const date=$("date").value||today();
   $("err").textContent="";
   try{
