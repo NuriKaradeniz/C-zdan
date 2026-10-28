@@ -23,7 +23,7 @@ Uygulama: https://nurikaradeniz.github.io/C-zdan/hamburg/
 
 ---
 
-# Koşu Ritmi
+# Kadans
 
 Koşarken adım ritmimi tuttuğum metronom.
 

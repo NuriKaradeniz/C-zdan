@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<title>Koşu Ritmi</title>
+<title>Kadans</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Ritim">
+<meta name="apple-mobile-web-app-title" content="Kadans">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#f2f3ee" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e1113" media="(prefers-color-scheme: dark)">
@@ -103,7 +103,7 @@ input[type=range]{width:100%;accent-color:var(--accent);height:32px}
 <body>
 <div class="wrap">
   <header>
-    <div class="brand">Koşu Ritmi<small>LAUF-METRONOM</small></div>
+    <div class="brand">Kadans<small>LAUF-METRONOM</small></div>
     <div class="stats num">
       <div><b id="time">0:00</b><span>süre</span></div>
       <div><b id="steps">0</b><span>adım</span></div>
@@ -305,7 +305,7 @@ document.addEventListener("visibilitychange",()=>{
 function mediaSession(on){
   if(!("mediaSession" in navigator))return;
   try{
-    navigator.mediaSession.metadata=new MediaMetadata({title:`Koşu Ritmi · ${S.bpm} adım/dk`,artist:"Ritim",artwork:[{src:"icon-512.png",sizes:"512x512",type:"image/png"}]});
+    navigator.mediaSession.metadata=new MediaMetadata({title:`Kadans · ${S.bpm} adım/dk`,artist:"Kadans",artwork:[{src:"icon-512.png",sizes:"512x512",type:"image/png"}]});
     navigator.mediaSession.playbackState=on?"playing":"paused";
     navigator.mediaSession.setActionHandler("play",()=>{if(!playing)start()});
     navigator.mediaSession.setActionHandler("pause",()=>{if(playing)stop()});

@@ -1,6 +1,6 @@
 {
-  "name": "Koşu Ritmi",
-  "short_name": "Ritim",
+  "name": "Kadans",
+  "short_name": "Kadans",
   "description": "Koşu için adım ritmi metronomu",
   "lang": "tr",
   "start_url": "./",
