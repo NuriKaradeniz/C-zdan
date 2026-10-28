@@ -215,6 +215,12 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
 .done.warn .done-extra{background:color-mix(in srgb,var(--warn) 16%,transparent)}
 .done-ok{margin-top:10px;width:100%;border:0;border-radius:12px;padding:12px;background:var(--ink);color:var(--bg);font-weight:600;font-size:1rem;cursor:pointer}
 @media (prefers-reduced-motion:reduce){.done,.done-card{transition:none}}
+/* privacy */
+.big-row{display:flex;align-items:center;gap:12px}
+.big-row .big{min-width:0}
+.eye-btn{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid color-mix(in srgb,var(--accent-ink) 40%,transparent);background:color-mix(in srgb,var(--accent-ink) 12%,transparent);color:var(--accent-ink);display:grid;place-items:center;cursor:pointer;padding:0}
+.eye-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.eye-btn:active{transform:scale(.94)}
 /* icons */
 .logo{width:40px;height:40px;border-radius:11px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none}
 .logo svg{width:22px!important;height:22px!important}
@@ -260,7 +266,7 @@ h2{font-family:var(--f-display);font-weight:600;font-size:1.05rem;margin:0;displ
   <section class="hero" id="hero">
     <div>
       <div class="hero-top"><div class="label" id="heroLabel">Güncel bakiye · Kontostand</div><button class="budget-btn" id="budgetBtn">Başlangıç parası</button></div>
-      <div class="big num" id="remaining">0,00 €</div>
+      <div class="big-row"><div class="big num" id="remaining">0,00 €</div><button type="button" class="eye-btn" id="eyeBtn" aria-pressed="false" aria-label="Tutarları gizle"></button></div>
     </div>
     <form class="budget-form" id="budgetForm" hidden>
       <input id="budgetInput" inputmode="decimal" placeholder="Almanya'ya getirdiğin para, ör. 4000" aria-label="Başlangıç parası (€)">
@@ -439,6 +445,8 @@ const ICONS={
   flame:'<path d="M12 22c4 0 7-2.7 7-7 0-4-3-6-4-9-1 2-2 3-3.5 3.5C11 7 11 4 12 2 8 4 5 8.5 5 15c0 4.3 3 7 7 7z"/>',
   check:'<path d="M20 6 9 17l-5-5"/>',
   alert:'<path d="M12 3 2 21h20z"/><path d="M12 10v5M12 18h.01"/>',
+  eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff:'<path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1"/><path d="M6.6 6.6C3.8 8.5 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
   grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'
 };
 const svg=n=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||ICONS.dots}</svg>`;
@@ -451,7 +459,8 @@ const catById=Object.fromEntries([...CATS,...INCATS].map(c=>[c.id,c]));
 const isIn=e=>e.type==="income";
 const AYLAR=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
 const MONATE=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
-const eur=c=>(c/100).toLocaleString("de-DE",{style:"currency",currency:"EUR"});
+let hideMoney=false;try{hideMoney=localStorage.getItem("cuzdan-hide")==="1"}catch{}
+const eur=c=>hideMoney?"••••• €":(c/100).toLocaleString("de-DE",{style:"currency",currency:"EUR"});
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,"0");
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
@@ -825,6 +834,22 @@ $("limitForm").addEventListener("submit",async e=>{
   await store.setLimit(v);limit=v;$("limitForm").hidden=true;render();
   toast(v>0?`Aylık limit ${eur(v)} · günlük ~${eur(Math.floor(v/30))}`:"Limit kaldırıldı");
 });
+
+/* ---- privacy toggle ---- */
+function drawEye(){
+  const b=$("eyeBtn");
+  b.innerHTML=svg(hideMoney?"eyeOff":"eye");
+  b.setAttribute("aria-pressed",hideMoney);
+  b.setAttribute("aria-label",hideMoney?"Tutarları göster":"Tutarları gizle");
+}
+$("eyeBtn").onclick=()=>{
+  hideMoney=!hideMoney;
+  try{localStorage.setItem("cuzdan-hide",hideMoney?"1":"0")}catch{}
+  drawEye();render();
+  if(!$("viewTips").hidden)renderTips();
+  toast(hideMoney?"Tutarlar gizlendi":"Tutarlar görünüyor");
+};
+drawEye();
 
 /* ---- boot ---- */
 fillIcons();
