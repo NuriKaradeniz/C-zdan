@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kese'ye taşı</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cüzdan">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{--bg:#eef1f6;--surface:#fff;--ink:#141a2b;--muted:#5d6680;--line:#d9deea;--accent:#2747d4;--good:#1d8a5a;--warn:#b86e00;--bad:#c2332b}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1220;--surface:#171c2e;--ink:#e8ebf5;--muted:#98a1bb;--line:#2a3149;--accent:#7d96ff;--good:#4cc68c;--warn:#f0a83a;--bad:#ff6f66;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 ui-sans-serif,system-ui,-apple-system,sans-serif;padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(32px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:480px;margin:0 auto;display:grid;gap:16px}
+.head{display:flex;align-items:center;gap:12px}
+.head img{width:52px;height:52px;border-radius:12px}
+h1{font-size:1.4rem;margin:0;line-height:1.2}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:12px}
+.big{font-size:2rem;font-weight:800;line-height:1.1}
+.ok{color:var(--good)} .no{color:var(--bad)}
+.muted{color:var(--muted);font-size:.92rem;margin:0}
+ol{margin:0;padding-left:20px;display:grid;gap:8px}
+button{font:inherit;font-weight:600;border:0;border-radius:12px;padding:14px;cursor:pointer;width:100%}
+.primary{background:var(--accent);color:#fff}
+.secondary{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+textarea{width:100%;min-height:90px;font:12px ui-monospace,monospace;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg);color:var(--ink)}
+.msg{font-weight:600;margin:0}
+a{color:var(--accent);font-weight:600}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head"><img src="icon-180.png" alt=""><div><h1>Kayıtlarını Kese'ye taşı</h1><p class="muted">Cüzdan artık Kese oldu</p></div></div>
+
+  <section class="card" id="found" hidden>
+    <div class="big ok" id="count"></div>
+    <p class="muted" id="detail"></p>
+    <ol>
+      <li><b>Yedeği kaydet</b>'e bas, açılan menüde <b>Dosyalar'a Kaydet</b>'i seç.</li>
+      <li>Kese'yi aç, en alttaki <b>Yedeği geri yükle</b>'ye bas ve bu dosyayı seç.</li>
+      <li>Kayıtların Kese'de görünüyorsa bu eski simgeyi silebilirsin.</li>
+    </ol>
+    <button class="primary" id="saveBtn" type="button">Yedeği kaydet</button>
+    <p class="msg" id="saveMsg" hidden></p>
+    <button class="secondary" id="copyBtn" type="button">Olmazsa: yedeği metin olarak kopyala</button>
+    <textarea id="raw" readonly hidden aria-label="Yedek metni"></textarea>
+  </section>
+
+  <section class="card" id="empty" hidden>
+    <div class="big no">Burada kayıt yok</div>
+    <p class="muted">Bu sayfayı Safari'de açtın ya da kayıtlar başka bir simgede. Ana ekrandaki <b>eski Cüzdan simgesinden</b> aç. Eski simgeyi silme.</p>
+  </section>
+
+  <p class="muted">Kese: <a href="https://nurikaradeniz.github.io/Kese/">nurikaradeniz.github.io/Kese</a></p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let data=null;
+try{data=JSON.parse(localStorage.getItem("cuzdan-v1")||"null")}catch{}
+const list=data&&Array.isArray(data.expenses)?data.expenses:[];
+if(list.length||(data&&data.budget)){
+  $("found").hidden=false;
+  $("count").textContent=list.length+" kayıt bulundu ✓";
+  const dates=list.map(e=>e.date).filter(Boolean).sort();
+  const parts=[];
+  if(dates.length)parts.push(dates[0].split("-").reverse().join(".")+" – "+dates[dates.length-1].split("-").reverse().join("."));
+  if(data.budget)parts.push("başlangıç parası da var");
+  if(data.limit)parts.push("harcama limiti de var");
+  $("detail").textContent=parts.join(" · ");
+  const json=JSON.stringify(data);
+  $("raw").value=json;
+  $("saveBtn").onclick=async()=>{
+    const d=new Date(),p=n=>String(n).padStart(2,"0");
+    const name=`kese-yedek-${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}.json`;
+    const file=new File([json],name,{type:"application/json"});
+    const m=$("saveMsg");
+    try{
+      if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});m.textContent="Kaydettiysen şimdi Kese'yi aç.";m.hidden=false;return}
+    }catch(e){if(e.name==="AbortError")return}
+    const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();a.remove();
+    m.textContent="Dosya indirildi. Şimdi Kese'yi aç.";m.hidden=false;
+  };
+  $("copyBtn").onclick=async()=>{
+    $("raw").hidden=false;
+    try{await navigator.clipboard.writeText(json);$("copyBtn").textContent="Kopyalandı ✓ Notlar'a yapıştırıp sakla"}
+    catch{$("raw").focus();$("raw").select();$("copyBtn").textContent="Metni seç ve kopyala"}
+  };
+}else{
+  $("empty").hidden=false;
+}
+</script>
+</body>
+</html>
